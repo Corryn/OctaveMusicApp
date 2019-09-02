@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="octaveGreen">#14A59D</color>
+    <color name="octaveGray">#F5F5F0</color>
+    <color name="octaveOffGreen">#00CCCC</color>
+    <color name="pressed_color">#F0F0F5</color>
+    <color name="default_color">#FFFFFF</color>
+</resources>
