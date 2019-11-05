@@ -1,16 +1,16 @@
 package hci.com.octave;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +27,7 @@ public class TitleActivity extends AppCompatActivity {
 
     Handler handler;
     Runnable myRunnable;
+    int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,13 +38,17 @@ public class TitleActivity extends AppCompatActivity {
         else {
             setContentView(R.layout.activity_title);
 
-            ImageView logo = (ImageView) findViewById(R.id.logo);
+            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242;
+
+            ImageView logo = findViewById(R.id.logo);
             logo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     onClickOctave();
                 }
             });
+
+            askForExternalStoragePermission();
 
             Player.preparePlayer();
             Player.setActive();
@@ -65,7 +70,27 @@ public class TitleActivity extends AppCompatActivity {
         handler.removeCallbacks(myRunnable);
     }
 
-    public void createSongList() {
+    private void askForExternalStoragePermission() {
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // Explain to the user why we need to read the contacts
+            }
+
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+            // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+            // app-defined int constant that should be quite unique
+
+            return;
+        }
+    }
+
+    private void createSongList() {
         if(isExternalStorageReadable()) {
             ContentResolver musicResolver = getContentResolver();
             Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -119,7 +144,7 @@ public class TitleActivity extends AppCompatActivity {
         }
     }
 
-    public boolean isExternalStorageReadable() {
+    private boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state) ||
                 Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
@@ -128,7 +153,7 @@ public class TitleActivity extends AppCompatActivity {
         return false;
     }
 
-    public void onClickOctave() {
+    private void onClickOctave() {
         Intent i = new Intent(this, PlayerActivity.class);
         startActivity(i);
         overridePendingTransition(R.anim.slideinfrombottom, R.anim.slideouttotop);
