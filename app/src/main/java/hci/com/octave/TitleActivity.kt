@@ -15,8 +15,8 @@ import java.util.*
 
 class TitleActivity : AppCompatActivity() {
 
-    private var handler: Handler? = null
-    private var delayedStart: Runnable? = null
+    private lateinit var handler: Handler
+    private lateinit var delayedStart: Runnable
     private var MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242 // Unique app-defined constant
 
     private var idColumn = 0
@@ -48,13 +48,13 @@ class TitleActivity : AppCompatActivity() {
         delayedStart = Runnable {
             onClickOctave()
         }
-        handler?.postDelayed(delayedStart, 1500)
+        handler.postDelayed(delayedStart, 1500)
     }
 
     override fun onStop() {
         super.onStop()
 
-        handler?.removeCallbacks(delayedStart)
+        handler.removeCallbacks(delayedStart)
     }
 
     private fun askForExternalStoragePermission() {
