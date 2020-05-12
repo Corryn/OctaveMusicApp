@@ -27,6 +27,5 @@
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>
-    <!-- android:screenOrientation="sensorLandscape" -->
 
 </manifest>

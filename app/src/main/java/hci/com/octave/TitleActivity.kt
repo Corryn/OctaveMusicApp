@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
@@ -20,12 +22,12 @@ class TitleActivity : AppCompatActivity() {
     private var MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242 // Unique app-defined constant
 
     private var idColumn = 0
-    private var titleColumn = 0
-    private var artistColumn = 0
     private var albumIdColumn = 0
+    private var titleColumn = 0
     private var dataColumn = 0
 
     private val player = Player
+    private val metaRetriever = MediaMetadataRetriever()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,9 +83,8 @@ class TitleActivity : AppCompatActivity() {
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 // Get song data indices
                 idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-                titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
-                artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
                 albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+                titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
                 dataColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA)
 
                 // Add songs to list
@@ -106,8 +107,14 @@ class TitleActivity : AppCompatActivity() {
         val thisId = musicCursor.getLong(idColumn)
         val thisAlbumId = musicCursor.getLong(albumIdColumn)
         val thisTitle = musicCursor.getString(titleColumn)
-        val thisArtist = musicCursor.getString(artistColumn)
         val thisData = musicCursor.getString(dataColumn)
+
+        // A recent Android 10 update seems to have broken the cursor so it no longer finds the album artist.
+        // Use MediaMetadataRetriever to get the artist or album artist instead.
+        metaRetriever.setDataSource(thisData)
+        val artist = MediaMetadataRetriever.METADATA_KEY_ARTIST
+        val albumArtist = MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST
+        val thisArtist = metaRetriever.extractMetadata(artist) ?: metaRetriever.extractMetadata(albumArtist) ?: "Unknown"
 
         val song = Song(thisId, thisAlbumId, thisTitle, thisArtist, thisData)
         allSongs.add(song) // Add to main song list
