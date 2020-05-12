@@ -34,6 +34,8 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private var y1 = 0f
     private var y2 = 0f
 
+    val player = Player
+
     var menuOpen = false
     var viewingSongs = false
 
@@ -64,12 +66,12 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
         playerMenuList = findViewById<View>(R.id.playerMenuList) as ListView
         playerMenuArt = findViewById<View>(R.id.playerMenuArt) as ImageView
         artistLabel = findViewById(R.id.artistLabel)
-        artistAdapter = ArtistAdapter(this, R.layout.list_item_artist, Player.getArtistList())
+        artistAdapter = ArtistAdapter(this, R.layout.list_item_artist, player.artistList)
 
         playerMenuList?.adapter = artistAdapter
         playerMenuList?.itemsCanFocus = false
 
-        Player.resetItemColor()
+        player.resetItemColor()
         setSongClickListener(false)
 
         nowPlaying = findViewById(R.id.playerNowPlaying)
@@ -100,12 +102,8 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 val searchString = s.toString().trim { it <= ' ' }
-                playerMenuList?.adapter = Player.filterSongs(searchString)
-                if ((searchString == "")) {
-                    Player.setSearching(false)
-                } else {
-                    Player.setSearching(true)
-                }
+                playerMenuList?.adapter = player.filterSongs(searchString)
+                player.isSearching = searchString != ""
             }
 
             override fun afterTextChanged(s: Editable) {}
@@ -119,7 +117,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
             animation.duration = 500
             v.startAnimation(animation)
             if (searchBar?.text.toString() != "") {
-                Player.setSearching(false)
+                player.isSearching = false
                 searchBar?.text = ""
             }
         }
@@ -133,10 +131,10 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private fun setUpPauseButton() {
         pause = findViewById(R.id.pause)
         pause?.setOnClickListener {
-            if (Player.getNowPlaying() != null) {
+            if (player.getNowPlaying() != null) {
                 pause()
-            } else if (!Player.playlistIsEmpty()) {
-                Player.nextSong()
+            } else if (!player.playlistIsEmpty()) {
+                player.nextSong()
                 pause?.setImageResource(R.drawable.octavepause)
                 setUpNext()
             } else {
@@ -148,7 +146,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private fun setUpNextButton() {
         next = findViewById(R.id.next)
         next?.setOnClickListener {
-            if (Player.getNowPlaying() != null) {
+            if (player.getNowPlaying() != null) {
                 nextSongClick()
             } else {
                 noSongPicked()
@@ -159,7 +157,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private fun setUpPreviousButton() {
         previous = findViewById(R.id.previous)
         previous?.setOnClickListener {
-            if (Player.getNowPlaying() != null) {
+            if (player.getNowPlaying() != null) {
                 prevSongClick()
             } else {
                 noSongPicked()
@@ -170,7 +168,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private fun setUpRepeatButton() {
         repeat = findViewById(R.id.repeat)
         repeat?.setOnClickListener {
-            val res = Player.toggleRepeat()
+            val res = player.toggleRepeat()
             if (res) {
                 Toast.makeText(applicationContext, "Repeat on", Toast.LENGTH_SHORT).show()
                 repeat?.setImageResource(R.drawable.octaverepeatactive)
@@ -184,7 +182,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     private fun setUpShuffleButton() {
         shuffle = findViewById(R.id.shuffle)
         shuffle?.setOnClickListener {
-            val res = Player.toggleShuffle()
+            val res = player.toggleShuffle()
             if (res) {
                 Toast.makeText(applicationContext, "Shuffle on", Toast.LENGTH_SHORT).show()
                 shuffle?.setImageResource(R.drawable.octaveshuffleactive)
@@ -206,18 +204,18 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun resume() {
-        Player.updateContext(applicationContext)
+        player.updateContext(applicationContext)
         updateCompletionListener()
 
-        if (Player.getNowPlaying() != null) {
+        if (player.getNowPlaying() != null) {
             setNowPlaying()
         }
 
-        if (Player.getSelected() != -1) {
-            playerMenuList?.setSelection(Player.getSelected())
+        if (player.selected != -1) {
+            playerMenuList?.setSelection(player.selected)
         }
 
-        updateAlbumArt(Player.getSelectedSong())
+        updateAlbumArt(player.selectedSong)
     }
 
     override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
@@ -238,7 +236,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
-            playerMenuList?.adapter = Player.filterSongs(searchString)
+            playerMenuList?.adapter = player.filterSongs(searchString)
         }
         return true
     }
@@ -282,13 +280,13 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
 
     private fun returnToArtistList() {
         searchBar?.text = ""
-        Player.setSearching(false)
+        player.isSearching = false
 
         searchBar?.visibility = View.INVISIBLE
         clearSearch?.visibility = View.INVISIBLE
         artistLabel?.visibility = View.VISIBLE
 
-        Player.setViewedList(null)
+        player.viewedList = null
 
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
@@ -321,9 +319,9 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                     nextSongClick()
                 } else {
                     if (!menuOpen) {
-                        if (!Player.playlistIsEmpty()) {
+                        if (!player.playlistIsEmpty()) {
                             nextSongClick()
-                        } else if (Player.getNowPlaying() != null) {
+                        } else if (player.getNowPlaying() != null) {
                             pause()
                         }
                     }
@@ -334,11 +332,11 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun pause() {
-        if (Player.isPaused()) {
-            Player.unpauseSong()
+        if (player.isPaused) {
+            player.unpauseSong()
             pause?.setImageResource(R.drawable.octavepause)
         } else {
-            Player.pauseSong()
+            player.pauseSong()
             pause?.setImageResource(R.drawable.octaveplay)
         }
     }
@@ -367,16 +365,16 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun updateCompletionListener() {
-        Player.getPlayer().setOnCompletionListener {
-            Player.nextSong()
+        player.player.setOnCompletionListener {
+            player.nextSong()
             setNowPlaying()
             setUpNext()
         }
     }
 
     private fun nextSongClick() {
-        if (Player.getNowPlaying() != null) {
-            Player.nextSong()
+        if (player.getNowPlaying() != null) {
+            player.nextSong()
             setNowPlaying()
             setUpNext()
             pause?.setImageResource(R.drawable.octavepause)
@@ -384,9 +382,9 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun prevSongClick() {
-        if (Player.getNowPlaying() != null) {
-            if (Player.playlistIsEmpty()) {
-                Player.prevSong()
+        if (player.getNowPlaying() != null) {
+            if (player.playlistIsEmpty()) {
+                player.prevSong()
                 setNowPlaying()
                 pause?.setImageResource(R.drawable.octavepause)
             } else {
@@ -396,14 +394,14 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setNowPlaying() {
-        val song = Player.getNowPlaying()
+        val song = player.getNowPlaying()
         if (song != null) {
             nowPlaying?.text = getString(R.string.now_playing, song.title, song.artist)
         }
     }
 
     private fun setUpNext() {
-        val song = Player.playlistNext()
+        val song = player.playlistNext()
         if (song != null) {
             upNext?.visibility = View.VISIBLE
             upNext?.text = getString(R.string.up_next, song.title, song.artist)
@@ -419,12 +417,12 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                 animation.duration = 500
                 view.startAnimation(animation)
 
-                if (Player.getPlayClicked()) {
+                if (player.playClicked) {
                     pause?.setImageResource(R.drawable.octavepause)
-                    Player.setPlayClicked(false)
+                    player.playClicked = false
                 }
 
-                Player.setSelected(position)
+                player.selected = position
                 updateAlbumArt(parent.getItemAtPosition(position) as Song?)
             }
         } else {
@@ -435,13 +433,13 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                     playerMenuList?.startAnimation(animation)
 
                     val selectedArtist: String = parent.getItemAtPosition(position) as String
-                    val artistSongs: List<Song> = Player.getByArtistList()[selectedArtist] ?: return
+                    val artistSongs: List<Song> = player.byArtistList[selectedArtist] ?: return
 
                     songAdapter = SongAdapter(applicationContext, R.layout.list_item_song, artistSongs)
                     playerMenuList?.adapter = songAdapter
 
                     setSongClickListener(true)
-                    Player.setViewedList(artistSongs)
+                    player.viewedList = artistSongs
 
                     artistLabel?.visibility = View.INVISIBLE
                     searchBar?.visibility = View.VISIBLE
@@ -454,18 +452,18 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
 
     private fun updateAlbumArt(song: Song?) {
         if (song != null) {
-            val albumArt = Player.getAlbumArt(contentResolver, song.albumID)
+            val albumArt = player.getAlbumArt(contentResolver, song.albumID)
             if (albumArt != null) {
-                playerMenuArt?.setImageBitmap(Player.getRoundedCornerBitmap(Player.getAlbumArt(contentResolver, song.albumID), 50))
+                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(contentResolver, song.albumID), 50))
             } else {
                 val logo = BitmapFactory.decodeResource(applicationContext.resources,
                         R.drawable.octave)
-                playerMenuArt?.setImageBitmap(Player.getRoundedCornerBitmap(logo, 50))
+                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
             }
         } else {
             val logo = BitmapFactory.decodeResource(applicationContext.resources,
                     R.drawable.octave)
-            playerMenuArt?.setImageBitmap(Player.getRoundedCornerBitmap(logo, 50))
+            playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
         }
     }
 

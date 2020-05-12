@@ -25,10 +25,12 @@ class TitleActivity : AppCompatActivity() {
     private var albumIdColumn = 0
     private var dataColumn = 0
 
+    private val player = Player
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (Player.exists()) {
+        if (player.exists()) {
             onClickOctave()
             return
         }
@@ -40,8 +42,8 @@ class TitleActivity : AppCompatActivity() {
 
         askForExternalStoragePermission()
 
-        Player.preparePlayer()
-        Player.setActive()
+        player.preparePlayer()
+        player.setActive()
         createSongList()
 
         handler = Handler()
@@ -71,9 +73,9 @@ class TitleActivity : AppCompatActivity() {
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             val musicCursor = musicResolver.query(musicUri, null, null, null, null)
 
-            val allSongs = Player.getSongList()
-            val artists = Player.getArtistList()
-            val songsByArtist = Player.getByArtistList()
+            val allSongs = player.songList
+            val artists = player.artistList
+            val songsByArtist = player.byArtistList
 
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 // Get song data indices
@@ -88,7 +90,7 @@ class TitleActivity : AppCompatActivity() {
                     processSong(musicCursor, allSongs, artists, songsByArtist)
                 } while (musicCursor.moveToNext())
 
-                artists.sortWith(Comparator { text1, text2 -> text1.compareTo(text2, ignoreCase = true) })
+                artists.sortWith(Comparator { text1: String, text2: String -> text1.compareTo(text2, ignoreCase = true) })
 
                 musicCursor.close()
             }
@@ -99,7 +101,7 @@ class TitleActivity : AppCompatActivity() {
         }
     }
 
-    private fun processSong(musicCursor: Cursor, allSongs: MutableList<Song>, artists: MutableList<String>, songsByArtist: HashMap<String, ArrayList<Song>>) {
+    private fun processSong(musicCursor: Cursor, allSongs: MutableList<Song>, artists: MutableList<String>, songsByArtist: HashMap<String, MutableList<Song>>) {
         val thisId = musicCursor.getLong(idColumn)
         val thisAlbumId = musicCursor.getLong(albumIdColumn)
         val thisTitle = musicCursor.getString(titleColumn)
