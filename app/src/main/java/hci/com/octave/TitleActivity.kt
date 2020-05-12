@@ -71,7 +71,8 @@ class TitleActivity : AppCompatActivity() {
         if (isExternalStorageReadable) {
             val musicResolver = contentResolver
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val musicCursor = musicResolver.query(musicUri, null, null, null, null)
+            val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+            val musicCursor = musicResolver.query(musicUri, null, selection, null, null)
 
             val allSongs = player.songList
             val artists = player.artistList

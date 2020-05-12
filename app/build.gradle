@@ -7,7 +7,7 @@ android {
     buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "hci.com.octave"
-        minSdkVersion 23
+        minSdkVersion 29
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"

@@ -11,7 +11,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.RectF
-import android.media.AudioManager
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.widget.Toast
@@ -19,6 +19,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+
 
 object Player {
     val songList = mutableListOf<Song>()
@@ -161,7 +162,10 @@ object Player {
         }
         try {
             player.reset()
-            player.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            player.setAudioAttributes(
+                    AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
             player.setDataSource(context!!, uri)
             player.prepare()
             player.start()
@@ -177,16 +181,18 @@ object Player {
     }
 
     private fun setSong(s: Song?) {
-        val uri: Uri?
-        uri = try {
+        val uri: Uri? = try {
             Uri.parse("file:///" + s!!.data)
         } catch (e: Exception) {
             return
         }
         try {
             player.reset()
-            player.setAudioStreamType(AudioManager.STREAM_MUSIC)
-            player.setDataSource(context!!, uri)
+            player.setAudioAttributes(
+                    AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+            player.setDataSource(context!!, uri ?: throw IOException())
             player.prepare()
             player.start()
             if (repeat) {
