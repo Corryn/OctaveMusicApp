@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.media.MediaMetadataRetriever
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
@@ -64,16 +63,16 @@ class TitleActivity : AppCompatActivity() {
 
     private fun createSongList() {
         if (isExternalStorageReadable) {
-            val musicResolver = contentResolver
-            val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val projection = listOf(
+            val musicProjection = listOf(
                     MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.ALBUM_ID,
                     MediaStore.Audio.Albums.ARTIST,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.DATA)
-            val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
-            val musicCursor = musicResolver.query(musicUri, projection.toTypedArray(), selection, null, null)
+            val musicSelection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+
+            val musicCursor = contentResolver.query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicProjection.toTypedArray(), musicSelection, null, null)
 
             val allSongs = player.songList
             val artists = player.artistList
