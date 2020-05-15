@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
@@ -21,13 +20,7 @@ class TitleActivity : AppCompatActivity() {
     private lateinit var delayedStart: Runnable
     private var MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242 // Unique app-defined constant
 
-    private var idColumn = 0
-    private var albumIdColumn = 0
-    private var titleColumn = 0
-    private var dataColumn = 0
-
     private val player = Player
-    private val metaRetriever = MediaMetadataRetriever()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,21 +66,20 @@ class TitleActivity : AppCompatActivity() {
         if (isExternalStorageReadable) {
             val musicResolver = contentResolver
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            val projection = listOf(
+                    MediaStore.Audio.Media._ID,
+                    MediaStore.Audio.Media.ALBUM_ID,
+                    MediaStore.Audio.Albums.ARTIST,
+                    MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Media.DATA)
             val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
-            val musicCursor = musicResolver.query(musicUri, null, selection, null, null)
+            val musicCursor = musicResolver.query(musicUri, projection.toTypedArray(), selection, null, null)
 
             val allSongs = player.songList
             val artists = player.artistList
             val songsByArtist = player.byArtistList
 
             if (musicCursor != null && musicCursor.moveToFirst()) {
-                // Get song data indices
-                idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-                albumIdColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
-                titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
-                dataColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA)
-
-                // Add songs to list
                 do {
                     processSong(musicCursor, allSongs, artists, songsByArtist)
                 } while (musicCursor.moveToNext())
@@ -104,17 +96,11 @@ class TitleActivity : AppCompatActivity() {
     }
 
     private fun processSong(musicCursor: Cursor, allSongs: MutableList<Song>, artists: MutableList<String>, songsByArtist: HashMap<String, MutableList<Song>>) {
-        val thisId = musicCursor.getLong(idColumn)
-        val thisAlbumId = musicCursor.getLong(albumIdColumn)
-        val thisTitle = musicCursor.getString(titleColumn)
-        val thisData = musicCursor.getString(dataColumn)
-
-        // A recent Android 10 update seems to have broken the cursor so it no longer finds the album artist.
-        // Use MediaMetadataRetriever to get the artist or album artist instead.
-        metaRetriever.setDataSource(thisData)
-        val artist = MediaMetadataRetriever.METADATA_KEY_ARTIST
-        val albumArtist = MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST
-        val thisArtist = metaRetriever.extractMetadata(artist) ?: metaRetriever.extractMetadata(albumArtist) ?: "Unknown"
+        val thisId = musicCursor.getLong(0)
+        val thisAlbumId = musicCursor.getLong(1)
+        val thisArtist = musicCursor.getString(2)
+        val thisTitle = musicCursor.getString(3)
+        val thisData = musicCursor.getString(4)
 
         val song = Song(thisId, thisAlbumId, thisTitle, thisArtist, thisData)
         allSongs.add(song) // Add to main song list
