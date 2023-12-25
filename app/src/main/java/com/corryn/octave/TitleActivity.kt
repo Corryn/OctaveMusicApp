@@ -4,12 +4,14 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
@@ -20,6 +22,8 @@ class TitleActivity : AppCompatActivity() {
     private var MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242 // Unique app-defined constant
 
     private val player = Player
+
+    private val storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onStoragePermissionRequestResult)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,47 +58,65 @@ class TitleActivity : AppCompatActivity() {
     }
 
     private fun askForExternalStoragePermission() {
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE)
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            storagePermissionLauncher.launch(permission)
         }
     }
 
     private fun createSongList() {
         if (isExternalStorageReadable) {
-            val musicProjection = listOf(
-                    MediaStore.Audio.Media._ID,
-                    MediaStore.Audio.Media.ALBUM_ID,
-                    MediaStore.Audio.Albums.ARTIST,
-                    MediaStore.Audio.Media.TITLE,
-                    MediaStore.Audio.Media.DATA)
-            val musicSelection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+            val musicProjection = arrayOf(
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.ALBUM_ID,
+                MediaStore.Audio.Albums.ARTIST,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.DATA
+            )
 
-            val musicCursor = contentResolver.query(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, musicProjection.toTypedArray(), musicSelection, null, null)
+            val musicSelection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
             val allSongs = player.songList
             val artists = player.artistList
             val songsByArtist = player.byArtistList
 
-            if (musicCursor != null && musicCursor.moveToFirst()) {
-                do {
+            contentResolver.query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                musicProjection,
+                musicSelection,
+                null,
+                null
+            )?.use { musicCursor ->
+                while (musicCursor.moveToNext()) {
                     processSong(musicCursor, allSongs, artists, songsByArtist)
-                } while (musicCursor.moveToNext())
-
-                artists.sortWith(Comparator { text1: String, text2: String -> text1.compareTo(text2, ignoreCase = true) })
-
-                musicCursor.close()
+                }
             }
+
+            artists.sortWith { text1: String, text2: String -> text1.compareTo(text2, ignoreCase = true) }
         } else {
-            Toast.makeText(applicationContext,
-                    "Media files were not available for access.  " +
-                            "Application may behave incorrectly.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                applicationContext,
+                "Media files were not available for access.  " +
+                        "Application may behave incorrectly.", Toast.LENGTH_LONG
+            ).show()
         }
     }
 
-    private fun processSong(musicCursor: Cursor, allSongs: MutableList<Song>, artists: MutableList<String>, songsByArtist: HashMap<String, MutableList<Song>>) {
+    private fun onStoragePermissionRequestResult(isGranted: Boolean) {
+
+    }
+
+    private fun processSong(
+        musicCursor: Cursor,
+        allSongs: MutableList<Song>,
+        artists: MutableList<String>,
+        songsByArtist: HashMap<String, MutableList<Song>>
+    ) {
         val thisId = musicCursor.getLong(0)
         val thisAlbumId = musicCursor.getLong(1)
         val thisArtist = musicCursor.getString(2)
