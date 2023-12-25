@@ -17,9 +17,8 @@ import java.util.*
 
 class TitleActivity : AppCompatActivity() {
 
-    private lateinit var handler: Handler
-    private lateinit var delayedStart: Runnable
-    private var MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4242 // Unique app-defined constant
+    private var handler: Handler? = null
+    private var delayedStart: Runnable? = null
 
     private val player = Player
 
@@ -38,26 +37,33 @@ class TitleActivity : AppCompatActivity() {
         val logo = findViewById<ImageView>(R.id.logo)
         logo.setOnClickListener { onClickOctave() }
 
-        askForExternalStoragePermission()
+        val requestedPermission = askForExternalStoragePermission()
 
+        if (requestedPermission.not()) {
+            startupInit()
+
+            handler = Handler()
+            delayedStart = Runnable {
+                onClickOctave()
+            }
+            handler?.postDelayed(delayedStart ?: return, 1500)
+        }
+    }
+
+    private fun startupInit() {
         player.preparePlayer()
         player.setActive()
         createSongList()
-
-        handler = Handler()
-        delayedStart = Runnable {
-            onClickOctave()
-        }
-        handler.postDelayed(delayedStart, 1500)
     }
 
     override fun onStop() {
         super.onStop()
 
-        handler.removeCallbacks(delayedStart)
+        handler?.removeCallbacks(delayedStart ?: return)
     }
 
-    private fun askForExternalStoragePermission() {
+    // Returns a boolean indicating whether permission had to be requested.
+    private fun askForExternalStoragePermission(): Boolean {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
@@ -66,7 +72,10 @@ class TitleActivity : AppCompatActivity() {
 
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
             storagePermissionLauncher.launch(permission)
+            return true
         }
+
+        return false
     }
 
     private fun createSongList() {
@@ -107,8 +116,10 @@ class TitleActivity : AppCompatActivity() {
         }
     }
 
+    // TODO Behavior for when permission is denied
     private fun onStoragePermissionRequestResult(isGranted: Boolean) {
-
+        startupInit()
+        onClickOctave()
     }
 
     private fun processSong(
