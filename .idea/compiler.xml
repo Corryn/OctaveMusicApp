@@ -11,6 +11,8 @@
       <entry name="!?*.kt" />
       <entry name="!?*.clj" />
     </wildcardResourcePatterns>
-    <bytecodeTargetLevel target="17" />
+    <bytecodeTargetLevel>
+      <module name="OctaveMusicApp.app" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
