@@ -28,6 +28,7 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentPlayerBinding
+import com.corryn.octave.model.Song
 import com.corryn.octave.ui.base.BaseFragment
 import kotlin.math.abs
 

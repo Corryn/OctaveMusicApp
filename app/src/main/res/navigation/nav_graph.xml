@@ -7,8 +7,8 @@
 
     <fragment
         android:id="@+id/titleFragment"
-        android:name="com.corryn.octave.TitleFragment"
-        tools:layout="@layout/fragment_title" >
+        android:name="com.corryn.octave.SplashFragment"
+        tools:layout="@layout/fragment_splash" >
         <action
             android:id="@+id/action_titleFragment_to_playerFragment"
             app:destination="@id/playerFragment"

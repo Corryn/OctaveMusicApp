@@ -10,6 +10,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.corryn.octave.model.Song;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

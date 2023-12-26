@@ -1,4 +1,4 @@
-package com.corryn.octave;
+package com.corryn.octave.model;
 
 public class Song {
 
