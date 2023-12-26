@@ -229,12 +229,12 @@ object Player {
         return -1
     }
 
-    fun getAlbumArt(cr: ContentResolver, albumId: Long): Bitmap? {
+    fun getAlbumArt(cr: ContentResolver?, albumId: Long): Bitmap? {
         val inputStream: InputStream?
         val sArtworkUri = Uri.parse("content://media/external/audio/albumart")
         val uri = ContentUris.withAppendedId(sArtworkUri, albumId)
         inputStream = try {
-            cr.openInputStream(uri)
+            cr?.openInputStream(uri)
         } catch (e: FileNotFoundException) {
             return null
         }

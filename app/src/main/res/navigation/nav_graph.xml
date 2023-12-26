@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/octave_graph"
+    app:startDestination="@id/titleFragment">
+
+    <fragment
+        android:id="@+id/titleFragment"
+        android:name="com.corryn.octave.TitleFragment"
+        tools:layout="@layout/fragment_title" >
+        <action
+            android:id="@+id/action_titleFragment_to_playerFragment"
+            app:destination="@id/playerFragment"
+            app:enterAnim="@anim/slideinfrombottom"
+            app:exitAnim="@anim/slideouttotop"
+            app:popUpTo="@id/titleFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="com.corryn.octave.PlayerFragment"
+        tools:layout="@layout/fragment_player"/>
+</navigation>

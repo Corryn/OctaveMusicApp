@@ -8,8 +8,10 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -24,10 +26,15 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.findNavController
+import com.corryn.octave.databinding.FragmentPlayerBinding
+import com.corryn.octave.ui.base.BaseFragment
 import kotlin.math.abs
 
-class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
+class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionListener {
+
+    override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentPlayerBinding
+        get() = FragmentPlayerBinding::inflate
 
     private var x1 = 0f
     private var x2 = 0f
@@ -58,15 +65,18 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     var artistAdapter: ArtistAdapter? = null
     var playerMenuArt: ImageView? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_player)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        menu = findViewById<View>(R.id.playerMenu) as RelativeLayout
-        playerMenuList = findViewById<View>(R.id.playerMenuList) as ListView
-        playerMenuArt = findViewById<View>(R.id.playerMenuArt) as ImageView
-        artistLabel = findViewById(R.id.artistLabel)
-        artistAdapter = ArtistAdapter(this, R.layout.list_item_artist, player.artistList)
+        initializeBackPressListener {
+            handleBackPressed()
+        }
+
+        menu = binding.playerMenu
+        playerMenuList = binding.playerMenuList
+        playerMenuArt = binding.playerMenuArt
+        artistLabel = binding.artistLabel
+        artistAdapter = ArtistAdapter(requireContext(), R.layout.list_item_artist, player.artistList)
 
         playerMenuList?.adapter = artistAdapter
         playerMenuList?.itemsCanFocus = false
@@ -74,8 +84,8 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
         player.resetItemColor()
         setSongClickListener(false)
 
-        nowPlaying = findViewById(R.id.playerNowPlaying)
-        upNext = findViewById(R.id.playlistUpNext)
+        nowPlaying = binding.playerNowPlaying
+        upNext = binding.playlistUpNext
 
         setUpMenuButton()
         setUpSearchBar()
@@ -86,7 +96,15 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
         setUpRepeatButton()
         setUpShuffleButton()
 
-        mainArt = findViewById(R.id.mainart)
+        binding.root.setOnTouchListener(object: View.OnTouchListener {
+            override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+                handleTouchEvent(event)
+
+                return true
+            }
+        })
+
+        mainArt = binding.mainart
         mainArt?.setOnTouchListener { _, _ -> false }
 
         setSongListLayout(this.resources.configuration.orientation)
@@ -94,7 +112,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpSearchBar() {
-        searchBar = findViewById(R.id.searchBar)
+        searchBar = binding.searchBar
 
         searchBar?.setOnEditorActionListener(this)
         searchBar?.addTextChangedListener(object : TextWatcher {
@@ -111,7 +129,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpClearButton() {
-        clearSearch = findViewById(R.id.clearSearch)
+        clearSearch = binding.clearSearch
         clearSearch?.setOnClickListener { v ->
             val animation: Animation = AlphaAnimation(0.3f, 1.0f)
             animation.duration = 500
@@ -124,12 +142,12 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpMenuButton() {
-        downArrow = findViewById(R.id.downarrow)
+        downArrow = binding.downarrow
         downArrow?.setOnClickListener { openMenu() }
     }
 
     private fun setUpPauseButton() {
-        pause = findViewById(R.id.pause)
+        pause = binding.pause
         pause?.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 pause()
@@ -144,7 +162,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpNextButton() {
-        next = findViewById(R.id.next)
+        next = binding.next
         next?.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 nextSongClick()
@@ -155,7 +173,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpPreviousButton() {
-        previous = findViewById(R.id.previous)
+        previous = binding.previous
         previous?.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 prevSongClick()
@@ -166,35 +184,35 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun setUpRepeatButton() {
-        repeat = findViewById(R.id.repeat)
+        repeat = binding.repeat
         repeat?.setOnClickListener {
             val res = player.toggleRepeat()
             if (res) {
-                Toast.makeText(applicationContext, "Repeat on", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Repeat on", Toast.LENGTH_SHORT).show()
                 repeat?.setImageResource(R.drawable.octaverepeatactive)
             } else {
-                Toast.makeText(applicationContext, "Repeat off", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Repeat off", Toast.LENGTH_SHORT).show()
                 repeat?.setImageResource(R.drawable.octaverepeat)
             }
         }
     }
 
     private fun setUpShuffleButton() {
-        shuffle = findViewById(R.id.shuffle)
+        shuffle = binding.shuffle
         shuffle?.setOnClickListener {
             val res = player.toggleShuffle()
             if (res) {
-                Toast.makeText(applicationContext, "Shuffle on", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Shuffle on", Toast.LENGTH_SHORT).show()
                 shuffle?.setImageResource(R.drawable.octaveshuffleactive)
             } else {
-                Toast.makeText(applicationContext, "Shuffle off", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Shuffle off", Toast.LENGTH_SHORT).show()
                 shuffle?.setImageResource(R.drawable.octaveshuffle)
             }
         }
     }
 
     private fun noSongPicked() {
-        Toast.makeText(applicationContext, "Swipe down and pick a song first!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Swipe down and pick a song first!", Toast.LENGTH_SHORT).show()
     }
 
     public override fun onResume() {
@@ -204,7 +222,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
     }
 
     private fun resume() {
-        player.updateContext(applicationContext)
+        player.updateContext(requireContext())
         updateCompletionListener()
 
         if (player.getNowPlaying() != null) {
@@ -220,24 +238,24 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
 
     override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
-            val `in` = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 
             // NOTE: In the author's example, he uses an identifier
             // called searchBar. If setting this code on your EditText
             // then use v.getWindowToken() as a reference to your
             // EditText is passed into this callback as a TextView
-            `in`.hideSoftInputFromWindow(v
-                    .applicationWindowToken,
-                    InputMethodManager.HIDE_NOT_ALWAYS)
+            imm?.hideSoftInputFromWindow(v.applicationWindowToken, InputMethodManager.HIDE_NOT_ALWAYS)
             // Must return true here to consume event
             return true
         }
+
         if (actionId == EditorInfo.IME_ACTION_NEXT || event.keyCode == KeyEvent.KEYCODE_ENTER) {
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
             playerMenuList?.adapter = player.filterSongs(searchString)
         }
+
         return true
     }
 
@@ -253,7 +271,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
             playerMenuList?.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
 
             val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
-            val resources = applicationContext.resources
+            val resources = requireContext().resources
             val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
 
             params.setMargins(px, px, px, px)
@@ -266,7 +284,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
         }
     }
 
-    override fun onBackPressed() {
+    private fun handleBackPressed() {
         if (menuOpen) {
             if (viewingSongs) {
                 returnToArtistList()
@@ -274,7 +292,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                 closeMenu()
             }
         } else {
-            super.onBackPressed()
+            findNavController().popBackStack()
         }
     }
 
@@ -298,12 +316,13 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
         viewingSongs = false
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.action) {
+    private fun handleTouchEvent(event: MotionEvent?): Boolean {
+        when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 x1 = event.x
                 y1 = event.y
             }
+
             MotionEvent.ACTION_UP -> {
                 x2 = event.x
                 y2 = event.y
@@ -328,7 +347,8 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                 }
             }
         }
-        return super.onTouchEvent(event)
+
+        return true
     }
 
     private fun pause() {
@@ -346,7 +366,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
             menuOpen = true
             menu?.visibility = View.VISIBLE
 
-            val animationSlideIn = AnimationUtils.loadAnimation(this, R.anim.slideinmenu)
+            val animationSlideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slideinmenu)
             menu?.startAnimation(animationSlideIn)
         }
     }
@@ -358,7 +378,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
             setNowPlaying()
             setUpNext()
 
-            val animationSlideOut = AnimationUtils.loadAnimation(this, R.anim.slideoutmenu)
+            val animationSlideOut = AnimationUtils.loadAnimation(requireContext(), R.anim.slideoutmenu)
             menu?.startAnimation(animationSlideOut)
             menu?.visibility = View.GONE
         }
@@ -388,7 +408,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                 setNowPlaying()
                 pause?.setImageResource(R.drawable.octavepause)
             } else {
-                Toast.makeText(this, "Disabled during queue playback.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Disabled during queue playback.", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -435,7 +455,7 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
                     val selectedArtist: String = parent.getItemAtPosition(position) as String
                     val artistSongs: List<Song> = player.byArtistList[selectedArtist] ?: return
 
-                    songAdapter = SongAdapter(applicationContext, R.layout.list_item_song, artistSongs)
+                    songAdapter = SongAdapter(requireContext(), R.layout.list_item_song, artistSongs)
                     playerMenuList?.adapter = songAdapter
 
                     setSongClickListener(true)
@@ -452,17 +472,21 @@ class PlayerActivity : AppCompatActivity(), OnEditorActionListener {
 
     private fun updateAlbumArt(song: Song?) {
         if (song != null) {
-            val albumArt = player.getAlbumArt(contentResolver, song.albumID)
+            val albumArt = player.getAlbumArt(activity?.contentResolver, song.albumID)
             if (albumArt != null) {
-                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(contentResolver, song.albumID), 50))
+                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(activity?.contentResolver, song.albumID), 50))
             } else {
-                val logo = BitmapFactory.decodeResource(applicationContext.resources,
-                        R.drawable.octave)
+                val logo = BitmapFactory.decodeResource(
+                    requireContext().resources,
+                    R.drawable.octave
+                )
                 playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
             }
         } else {
-            val logo = BitmapFactory.decodeResource(applicationContext.resources,
-                    R.drawable.octave)
+            val logo = BitmapFactory.decodeResource(
+                requireContext().resources,
+                R.drawable.octave
+            )
             playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
         }
     }

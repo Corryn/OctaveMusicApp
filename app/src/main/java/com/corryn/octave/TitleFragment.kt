@@ -8,45 +8,51 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
-import android.widget.ImageView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.findNavController
+import com.corryn.octave.databinding.FragmentTitleBinding
+import com.corryn.octave.ui.base.BaseFragment
 import java.util.*
 
-class TitleActivity : AppCompatActivity() {
+// TODO Splash screen instead?
+class TitleFragment : BaseFragment<FragmentTitleBinding>() {
+
+    override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentTitleBinding
+        get() = FragmentTitleBinding::inflate
 
     private var handler: Handler? = null
-    private var delayedStart: Runnable? = null
+    private var delayedStart: Runnable = Runnable(::onClickOctave)
 
     private val player = Player
 
     private val storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onStoragePermissionRequestResult)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         if (player.exists()) {
             onClickOctave()
             return
         }
 
-        setContentView(R.layout.activity_title)
-
-        val logo = findViewById<ImageView>(R.id.logo)
-        logo.setOnClickListener { onClickOctave() }
+        binding.logo.setOnClickListener { onClickOctave() }
 
         val requestedPermission = askForExternalStoragePermission()
 
         if (requestedPermission.not()) {
             startupInit()
 
-            handler = Handler()
+            handler = Handler(Looper.getMainLooper())
             delayedStart = Runnable {
                 onClickOctave()
             }
-            handler?.postDelayed(delayedStart ?: return, 1500)
+            handler?.postDelayed(delayedStart, autoProgressDelay)
         }
     }
 
@@ -59,7 +65,7 @@ class TitleActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
-        handler?.removeCallbacks(delayedStart ?: return)
+        handler?.removeCallbacks(delayedStart)
     }
 
     // Returns a boolean indicating whether permission had to be requested.
@@ -70,7 +76,7 @@ class TitleActivity : AppCompatActivity() {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
 
-        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+        if (activity?.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
             storagePermissionLauncher.launch(permission)
             return true
         }
@@ -94,7 +100,7 @@ class TitleActivity : AppCompatActivity() {
             val artists = player.artistList
             val songsByArtist = player.byArtistList
 
-            contentResolver.query(
+            activity?.contentResolver?.query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 musicProjection,
                 musicSelection,
@@ -108,11 +114,8 @@ class TitleActivity : AppCompatActivity() {
 
             artists.sortWith { text1: String, text2: String -> text1.compareTo(text2, ignoreCase = true) }
         } else {
-            Toast.makeText(
-                applicationContext,
-                "Media files were not available for access.  " +
-                        "Application may behave incorrectly.", Toast.LENGTH_LONG
-            ).show()
+            // TODO Dialog with warning? Means to retry?
+            Toast.makeText(requireContext(), "Media files were not available for access. Application may behave incorrectly.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -152,10 +155,11 @@ class TitleActivity : AppCompatActivity() {
         }
 
     private fun onClickOctave() {
-        val intent = Intent(this, PlayerActivity::class.java)
-        startActivity(intent)
-        overridePendingTransition(R.anim.slideinfrombottom, R.anim.slideouttotop)
-        finish()
+        findNavController().navigate(TitleFragmentDirections.actionTitleFragmentToPlayerFragment())
+    }
+
+    companion object {
+        private const val autoProgressDelay: Long = 1500L
     }
 
 }
