@@ -15,6 +15,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.widget.Toast
+import com.corryn.octave.model.Song
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream

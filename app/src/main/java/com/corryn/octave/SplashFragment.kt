@@ -1,7 +1,6 @@
 package com.corryn.octave
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.os.Build
@@ -16,15 +15,15 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.fragment.findNavController
-import com.corryn.octave.databinding.FragmentTitleBinding
+import com.corryn.octave.databinding.FragmentSplashBinding
+import com.corryn.octave.model.Song
 import com.corryn.octave.ui.base.BaseFragment
-import java.util.*
 
 // TODO Splash screen instead?
-class TitleFragment : BaseFragment<FragmentTitleBinding>() {
+class SplashFragment : BaseFragment<FragmentSplashBinding>() {
 
-    override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentTitleBinding
-        get() = FragmentTitleBinding::inflate
+    override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentSplashBinding
+        get() = FragmentSplashBinding::inflate
 
     private var handler: Handler? = null
     private var delayedStart: Runnable = Runnable(::onClickOctave)
@@ -155,7 +154,7 @@ class TitleFragment : BaseFragment<FragmentTitleBinding>() {
         }
 
     private fun onClickOctave() {
-        findNavController().navigate(TitleFragmentDirections.actionTitleFragmentToPlayerFragment())
+        findNavController().navigate(SplashFragmentDirections.actionTitleFragmentToPlayerFragment())
     }
 
     companion object {
