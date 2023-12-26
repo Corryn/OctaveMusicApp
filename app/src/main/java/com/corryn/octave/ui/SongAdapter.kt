@@ -56,13 +56,13 @@ class SongAdapter(
             }
 
             menuPlay.setOnClickListener {
-                root.performClick() // To trigger album art update
                 onPlayClicked(song, activeList)
+                root.performClick() // To trigger album art update
             }
 
             menuAdd.setOnClickListener {
-                root.performClick() // To trigger album art update
                 onAddClicked(song, activeList)
+                root.performClick() // To trigger album art update
             }
         }
 
