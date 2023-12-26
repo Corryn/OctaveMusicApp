@@ -17,18 +17,21 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemClickListener
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ListView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.corryn.octave.databinding.FragmentPlayerBinding
 import com.corryn.octave.model.Song
+import com.corryn.octave.ui.ArtistAdapter
+import com.corryn.octave.ui.SongAdapter
 import com.corryn.octave.ui.base.BaseFragment
 import kotlin.math.abs
 
@@ -61,9 +64,9 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     var mainArt: ImageView? = null
     var menu: RelativeLayout? = null
 
-    var playerMenuList: ListView? = null
-    var songAdapter: SongAdapter? = null
-    var artistAdapter: ArtistAdapter? = null
+    var playerMenuList: RecyclerView? = null
+    var songAdapter: SongAdapter = SongAdapter(::onSongClicked, ::onPlayClicked, ::onAddClicked)
+    var artistAdapter: ArtistAdapter = ArtistAdapter(::onArtistClicked)
     var playerMenuArt: ImageView? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -77,13 +80,20 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         playerMenuList = binding.playerMenuList
         playerMenuArt = binding.playerMenuArt
         artistLabel = binding.artistLabel
-        artistAdapter = ArtistAdapter(requireContext(), R.layout.list_item_artist, player.artistList)
 
-        playerMenuList?.adapter = artistAdapter
-        playerMenuList?.itemsCanFocus = false
+        playerMenuList?.apply {
+            layoutManager = LinearLayoutManager(context)
+            addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL).apply {
+                ContextCompat.getDrawable(context, R.drawable.blank_divider)?.let {
+                    setDrawable(it)
+                }
+            })
+            adapter = artistAdapter.also {
+                it.submitList(player.artistList)
+            }
+        }
 
         player.resetItemColor()
-        setSongClickListener(false)
 
         nowPlaying = binding.playerNowPlaying
         upNext = binding.playlistUpNext
@@ -121,7 +131,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 val searchString = s.toString().trim { it <= ' ' }
-                playerMenuList?.adapter = player.filterSongs(searchString)
+                playerMenuList?.apply {
+                    adapter = songAdapter.also {
+                        it.submitList(player.filterSongs(searchString))
+                    }
+                }
                 player.isSearching = searchString != ""
             }
 
@@ -231,7 +245,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
 
         if (player.selected != -1) {
-            playerMenuList?.setSelection(player.selected)
+            playerMenuList?.scrollToPosition(player.selected)
         }
 
         updateAlbumArt(player.selectedSong)
@@ -254,7 +268,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
-            playerMenuList?.adapter = player.filterSongs(searchString)
+            playerMenuList?.apply {
+                adapter = songAdapter.also {
+                    it.submitList(player.filterSongs(searchString))
+                }
+            }
         }
 
         return true
@@ -312,7 +330,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         playerMenuList?.startAnimation(animation)
 
         playerMenuList?.adapter = artistAdapter
-        setSongClickListener(false)
+        songAdapter.submitList(emptyList())
         updateAlbumArt(null)
         viewingSongs = false
     }
@@ -431,51 +449,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    fun setSongClickListener(set: Boolean) {
-        if (set) {
-            playerMenuList?.onItemClickListener = OnItemClickListener { parent, view, position, _ ->
-                val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-                animation.duration = 500
-                view.startAnimation(animation)
-
-                if (player.playClicked) {
-                    pause?.setImageResource(R.drawable.octavepause)
-                    player.playClicked = false
-                }
-
-                player.selected = position
-                updateAlbumArt(parent.getItemAtPosition(position) as Song?)
-            }
-        } else {
-            playerMenuList?.onItemClickListener = object : OnItemClickListener {
-                override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                    val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-                    animation.duration = 500
-                    playerMenuList?.startAnimation(animation)
-
-                    val selectedArtist: String = parent.getItemAtPosition(position) as String
-                    val artistSongs: List<Song> = player.byArtistList[selectedArtist] ?: return
-
-                    songAdapter = SongAdapter(requireContext(), R.layout.list_item_song, artistSongs)
-                    playerMenuList?.adapter = songAdapter
-
-                    setSongClickListener(true)
-                    player.viewedList = artistSongs
-
-                    artistLabel?.visibility = View.INVISIBLE
-                    searchBar?.visibility = View.VISIBLE
-                    clearSearch?.visibility = View.VISIBLE
-                    viewingSongs = true
-                }
-            }
-        }
-    }
-
     private fun updateAlbumArt(song: Song?) {
         if (song != null) {
-            val albumArt = player.getAlbumArt(activity?.contentResolver, song.albumID)
+            val albumArt = player.getAlbumArt(activity?.contentResolver, song.albumId)
             if (albumArt != null) {
-                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(activity?.contentResolver, song.albumID), 50))
+                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(activity?.contentResolver, song.albumId), 50))
             } else {
                 val logo = BitmapFactory.decodeResource(
                     requireContext().resources,
@@ -490,6 +468,63 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             )
             playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
         }
+    }
+
+    private fun onArtistClicked(artist: String) {
+        val animation: Animation = AlphaAnimation(0.3f, 1.0f)
+        animation.duration = 500
+        playerMenuList?.startAnimation(animation)
+
+        val artistSongs: List<Song> = player.byArtistList[artist] ?: return
+
+        playerMenuList?.adapter = songAdapter.also {
+            it.submitList(artistSongs)
+        }
+
+        player.viewedList = artistSongs
+
+        artistLabel?.visibility = View.INVISIBLE
+        searchBar?.visibility = View.VISIBLE
+        clearSearch?.visibility = View.VISIBLE
+        viewingSongs = true
+    }
+
+    private fun onSongClicked(song: Song, position: Int) {
+        if (player.playClicked) {
+            pause?.setImageResource(R.drawable.octavepause)
+            player.playClicked = false
+        }
+
+        player.selected = position
+        updateAlbumArt(song)
+    }
+
+    private fun onPlayClicked(song: Song, activeList: List<Song>) {
+        if (player.isSearching) {
+            player.activeList = player.viewedList
+            player.setSong(player.getSongIndex(song))
+        } else if (!player.playlistIsEmpty()) {
+            val temp: List<Song?>? = player.activeList
+            player.activeList = activeList
+            player.setSong(player.getSongIndex(song))
+            player.activeList = temp
+        } else {
+            player.activeList = activeList
+            player.setSong(player.getSongIndex(song))
+        }
+
+        player.playClicked = true
+    }
+
+    private fun onAddClicked(song: Song, activeList: List<Song>) {
+        if (player.isSearching) {
+            player.activeList = player.viewedList
+        } else {
+            player.activeList = activeList
+        }
+
+        player.addToPlaylist(song)
+        Toast.makeText(requireContext(), song.title + " added to queue!", Toast.LENGTH_SHORT).show()
     }
 
     companion object {

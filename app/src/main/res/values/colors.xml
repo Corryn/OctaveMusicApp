@@ -9,6 +9,7 @@
     <color name="octaveOffGreen">#00CCCC</color>
     <color name="pressed_color">#F0F0F5</color>
     <color name="default_color">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
 
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

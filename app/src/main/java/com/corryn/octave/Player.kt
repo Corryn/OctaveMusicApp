@@ -207,14 +207,14 @@ object Player {
         }
     }
 
-    fun filterSongs(query: String): SongAdapter {
+    fun filterSongs(query: String): List<Song> {
         val result = ArrayList<Song>()
         for (s in viewedList!!) {
             if (s.title.toLowerCase().contains(query.toLowerCase())) {
                 result.add(s)
             }
         }
-        return SongAdapter(context, R.layout.list_item_song, result)
+        return result
     }
 
     fun getNowPlaying(): Song? {

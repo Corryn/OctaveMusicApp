@@ -172,14 +172,12 @@
             android:layout_marginTop="5dp"
             android:layout_below="@id/searchBar">
 
-            <ListView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/playerMenuList"
                 android:layout_width="0dp"
                 android:layout_weight="0.7"
                 android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:dividerHeight="5dp"
-                android:divider="#FFFFFF" />
+                android:layout_margin="5dp" />
 
             <ImageView
                 android:id="@+id/playerMenuArt"
