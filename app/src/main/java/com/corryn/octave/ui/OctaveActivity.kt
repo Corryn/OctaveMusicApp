@@ -14,8 +14,6 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
-        setupNavController(binding.navHostFragment)
     }
 
 }
