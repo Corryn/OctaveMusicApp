@@ -50,7 +50,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     var menuOpen = false
     var viewingSongs = false
 
-    var nowPlaying: TextView? = null
     var upNext: TextView? = null
     var artistLabel: TextView? = null
     var searchBar: TextView? = null
@@ -95,8 +94,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
         player.resetItemColor()
 
-        nowPlaying = binding.playerNowPlaying
         upNext = binding.playlistUpNext
+
+        // Required for the text marquee to function.
+        binding.playerNowPlaying.isSelected = true
 
         setUpMenuButton()
         setUpSearchBar()
@@ -435,7 +436,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     private fun setNowPlaying() {
         val song = player.getNowPlaying()
         if (song != null) {
-            nowPlaying?.text = getString(R.string.now_playing, song.title, song.artist)
+            binding.playerNowPlaying.text = getString(R.string.now_playing, song.title, song.artist)
         }
     }
 

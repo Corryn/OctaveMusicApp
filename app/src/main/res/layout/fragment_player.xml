@@ -1,193 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/octaveGreen"
-    android:fitsSystemWindows="true">
+    android:background="@color/octaveGreen">
 
-    <TextView
-        android:id="@+id/playerNowPlaying"
-        android:text="Swipe down to start!"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:marqueeRepeatLimit ="marquee_forever"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:scrollHorizontally="true"
-        android:layout_centerHorizontal="true"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="#000000"
-        android:gravity="center"
-        android:background="@color/octaveGray"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/player_title_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true" />
+        android:padding="5dp"
+        android:background="@color/octaveGray"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <ImageView
-        android:id="@+id/downarrow"
-        android:src="@mipmap/downarrow"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <!-- focusable properties+singleLine seem to be needed for text marquee. -->
+        <TextView
+            android:id="@+id/playerNowPlaying"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:ellipsize="marquee"
+            android:gravity="center"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:paddingTop="10dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:paddingBottom="10dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="Swipe down to start!"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toStartOf="@id/downarrow"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- TODO Move this and any other non-launcher mipmaps to drawable. -->
+        <ImageView
+            android:id="@+id/downarrow"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@mipmap/downarrow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
         android:id="@+id/mainart"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:scaleType="fitXY"
         android:src="@drawable/octavesplashlandscape"
-        android:background="#B0B1B4"
-        android:layout_above="@+id/controls"
-        android:layout_below="@+id/playerNowPlaying" />
+        app:layout_constraintBottom_toTopOf="@id/controls"
+        app:layout_constraintTop_toBottomOf="@id/player_title_bar" />
 
     <TextView
         android:id="@+id/playlistUpNext"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:marqueeRepeatLimit ="marquee_forever"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:scrollHorizontally="true"
-        android:layout_centerHorizontal="true"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#000000"
-        android:gravity="center"
-        android:background="#00000000"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/controls" />
+        android:layout_above="@+id/controls"
+        android:layout_centerHorizontal="true"
+        android:background="#00000000"
+        android:ellipsize="marquee"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:scrollHorizontally="true"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/controls" />
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/controls"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:background="@color/octaveGray"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
-        android:background="@color/octaveGray"
-        android:layout_alignParentBottom="true">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
             android:id="@+id/shuffle"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30dp"
             android:src="@drawable/octaveshuffle"
-            android:layout_toLeftOf="@+id/previous"
-            android:layout_marginRight="30dp"
-            android:background="@null"
-            android:layout_alignParentBottom="true" />
+            app:layout_constraintEnd_toStartOf="@id/previous" />
 
         <ImageView
             android:id="@+id/previous"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="30dp"
             android:src="@drawable/octaveprevious"
-            android:layout_toLeftOf="@+id/pause"
-            android:layout_marginRight="30dp"
-            android:layout_alignParentBottom="true" />
+            app:layout_constraintEnd_toStartOf="@id/pause" />
 
         <ImageView
             android:id="@+id/pause"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
             android:src="@drawable/octaveplay"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageView
             android:id="@+id/next"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="30dp"
             android:src="@drawable/octavenext"
-            android:layout_toRightOf="@+id/pause"
-            android:layout_marginLeft="30dp"
-            android:layout_alignParentBottom="true" />
+            app:layout_constraintStart_toEndOf="@id/pause" />
 
         <ImageView
             android:id="@+id/repeat"
             android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="30dp"
             android:src="@drawable/octaverepeat"
-            android:layout_toRightOf="@+id/next"
-            android:layout_marginLeft="30dp"
-            android:layout_alignParentBottom="true"/>
+            app:layout_constraintStart_toEndOf="@id/next" />
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <RelativeLayout
         android:id="@+id/playerMenu"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/controls"
+        android:layout_height="0dp"
+        android:background="#FFFFFF"
         android:visibility="gone"
-        android:background="#FFFFFF">
+        app:layout_constraintBottom_toTopOf="@id/controls"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/artistLabel"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_margin="3dp"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#000000"
             android:gravity="center"
-            android:text="Artists"/>
+            android:text="Artists"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#000000" />
 
         <EditText
             android:id="@+id/searchBar"
             android:layout_width="match_parent"
             android:layout_height="50dp"
+            android:layout_alignParentTop="true"
             android:layout_toLeftOf="@+id/clearSearch"
             android:hint="Search..."
+            android:imeOptions="flagNoExtractUi"
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
-            android:visibility="invisible"
-            android:imeOptions="flagNoExtractUi"
-            android:layout_alignParentTop="true"/>
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/clearSearch"
             android:layout_width="75dp"
             android:layout_height="50dp"
-            android:background="@color/octaveOffGreen"
+            android:layout_alignParentRight="true"
             android:layout_margin="3dp"
+            android:background="@color/octaveOffGreen"
+            android:gravity="center"
+            android:text="CLEAR"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="#000000"
-            android:visibility="invisible"
-            android:layout_alignParentRight="true"
-            android:gravity="center"
-            android:text="CLEAR"/>
+            android:visibility="invisible" />
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://schemas.android.com/tools"
             android:id="@+id/innerMenu"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_below="@id/searchBar">
+            android:layout_below="@id/searchBar"
+            android:layout_marginTop="5dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/playerMenuList"
                 android:layout_width="0dp"
-                android:layout_weight="0.7"
                 android:layout_height="match_parent"
-                android:layout_margin="5dp" />
+                android:layout_margin="5dp"
+                android:layout_weight="0.7" />
 
             <ImageView
                 android:id="@+id/playerMenuArt"
                 android:layout_width="0dp"
-                android:layout_weight="0.3"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_height="wrap_content" />
+                android:layout_weight="0.3" />
 
         </LinearLayout>
 
     </RelativeLayout>
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
