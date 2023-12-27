@@ -14,10 +14,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentSplashBinding
 import com.corryn.octave.model.Song
 import com.corryn.octave.ui.base.BaseFragment
+import com.corryn.octave.viewmodel.PlayerViewModel
 
 // TODO Splash screen instead?
 class SplashFragment : BaseFragment<FragmentSplashBinding>() {
@@ -28,24 +30,19 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
     private var handler: Handler? = null
     private var delayedStart: Runnable = Runnable(::onClickOctave)
 
-    private val player = Player
+    private val vM: PlayerViewModel by activityViewModels()
 
     private val storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onStoragePermissionRequestResult)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (player.exists()) {
-            onClickOctave()
-            return
-        }
-
         binding.logo.setOnClickListener { onClickOctave() }
 
         val requestedPermission = askForExternalStoragePermission()
 
         if (requestedPermission.not()) {
-            startupInit()
+            createSongList()
 
             handler = Handler(Looper.getMainLooper())
             delayedStart = Runnable {
@@ -53,12 +50,6 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
             }
             handler?.postDelayed(delayedStart, autoProgressDelay)
         }
-    }
-
-    private fun startupInit() {
-        player.preparePlayer()
-        player.setActive()
-        createSongList()
     }
 
     override fun onStop() {
@@ -95,9 +86,9 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
 
             val musicSelection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
-            val allSongs = player.songList
-            val artists = player.artistList
-            val songsByArtist = player.byArtistList
+            val allSongs = vM.songList
+            val artists = vM.artistList
+            val songsByArtist = vM.byArtistList
 
             activity?.contentResolver?.query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -120,7 +111,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
 
     // TODO Behavior for when permission is denied
     private fun onStoragePermissionRequestResult(isGranted: Boolean) {
-        startupInit()
+        createSongList()
         onClickOctave()
     }
 

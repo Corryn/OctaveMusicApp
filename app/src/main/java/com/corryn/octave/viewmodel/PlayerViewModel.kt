@@ -1,14 +1,17 @@
 package com.corryn.octave.viewmodel
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corryn.octave.AlbumBitmapFactory
-import com.corryn.octave.model.NowPlayingInfo
+import com.corryn.octave.R
 import com.corryn.octave.model.Song
+import com.corryn.octave.model.SongUiDto
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -35,7 +38,6 @@ class PlayerViewModel: ViewModel() {
     private var songNowPlaying: Song? = null
     var selected = -1
 
-    private var active = false
     private var repeat = false
     private var shuffle = false
 
@@ -43,15 +45,33 @@ class PlayerViewModel: ViewModel() {
     var isSearching = false
 
     // Emitting a value of null indicates there was an error trying to play the song.
-    private val _nowPlaying: MutableSharedFlow<NowPlayingInfo?> = MutableSharedFlow()
-    val nowPlaying: SharedFlow<NowPlayingInfo?> = _nowPlaying.asSharedFlow()
+    private val _nowPlaying: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
+    val nowPlaying: SharedFlow<SongUiDto?> = _nowPlaying.asSharedFlow()
 
-    fun setActive() {
-        active = true
+    private val _upNext: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
+    val upNext: SharedFlow<SongUiDto?> = _upNext.asSharedFlow()
+
+    private val _albumArt: MutableSharedFlow<Bitmap?> = MutableSharedFlow()
+    val albumArt: SharedFlow<Bitmap?> = _albumArt.asSharedFlow()
+
+    fun preparePlayer(context: Context?) {
+        player.setOnCompletionListener {
+            nextSong(context)
+        }
     }
 
-    fun exists(): Boolean {
-        return active
+    fun updateNowPlayingAndUpNext() {
+        val currentSongInfo = songNowPlaying?.let {
+            SongUiDto(it.title, it.artist, showToast = false)
+        }
+        val nextSongInfo = playlistNext()?.let {
+            SongUiDto(it.title, it.artist, showToast = false)
+        }
+
+        viewModelScope.launch {
+            _nowPlaying.emit(currentSongInfo)
+            _upNext.emit(nextSongInfo)
+        }
     }
 
     fun pauseSong() {
@@ -65,16 +85,12 @@ class PlayerViewModel: ViewModel() {
     val isPaused: Boolean
         get() = !player.isPlaying
 
-    fun preparePlayer(context: Context) {
-        player.setOnCompletionListener { nextSong(context) }
-    }
-
     val selectedSong: Song?
         get() = if (selected != -1) {
             songList[selected]
         } else null
 
-    fun nextSong(context: Context) {
+    fun nextSong(context: Context?) {
         if (!playlist.isEmpty()) {
             setSong(removeFromPlaylist(), context)
         } else if (shuffle) {
@@ -87,7 +103,7 @@ class PlayerViewModel: ViewModel() {
         }
     }
 
-    fun prevSong(context: Context) {
+    fun prevSong(context: Context?) {
         if (playlist.isEmpty()) {
             when {
                 shuffle -> {
@@ -110,6 +126,7 @@ class PlayerViewModel: ViewModel() {
 
     fun addToPlaylist(s: Song) {
         playlist.add(s)
+        updateNowPlayingAndUpNext()
     }
 
     fun removeFromPlaylist(): Song? {
@@ -126,7 +143,7 @@ class PlayerViewModel: ViewModel() {
         } else null
     }
 
-    fun shuffle(context: Context) {
+    fun shuffle(context: Context?) {
         val random: Int
         val r = Random()
         random = r.nextInt(activeList!!.size)
@@ -144,7 +161,7 @@ class PlayerViewModel: ViewModel() {
         return shuffle
     }
 
-    fun setSong(songIndex: Int, context: Context) {
+    fun setSong(songIndex: Int, context: Context?) {
         val uri: Uri?
         val temp: Song?
         try {
@@ -159,7 +176,7 @@ class PlayerViewModel: ViewModel() {
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build())
-            player.setDataSource(context, uri)
+            player.setDataSource(context ?: throw IOException(), uri)
             player.prepare()
             player.start()
             if (repeat) {
@@ -169,21 +186,26 @@ class PlayerViewModel: ViewModel() {
             songNowPlaying = temp
 
             val song = activeList!![songIndex]!!
-            val info = NowPlayingInfo(song.title, song.artist)
+            val currentSongInfo = SongUiDto(song.title, song.artist, showToast = true)
+            val nextSongInfo = playlistNext()?.let {
+                SongUiDto(it.title, it.artist)
+            }
 
             viewModelScope.launch {
-                _nowPlaying.emit(info)
+                _nowPlaying.emit(currentSongInfo)
+                _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
                 _nowPlaying.emit(null)
+                _upNext.emit(null)
             }
         }
     }
 
-    private fun setSong(s: Song?, context: Context) {
+    private fun setSong(s: Song?, context: Context?) {
         val uri: Uri? = try {
-            Uri.parse("file:///" + s!!.data)
+            Uri.parse(fileUriPrefix + s!!.data)
         } catch (e: Exception) {
             return
         }
@@ -193,7 +215,7 @@ class PlayerViewModel: ViewModel() {
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build())
-            player.setDataSource(context, uri ?: throw IOException())
+            player.setDataSource(context ?: throw IOException(), uri ?: throw IOException())
             player.prepare()
             player.start()
             if (repeat) {
@@ -202,14 +224,19 @@ class PlayerViewModel: ViewModel() {
             nowPlayingIndex = activeList!!.indexOf(s)
             songNowPlaying = s
 
-            val info = NowPlayingInfo(s.title, s.artist)
+            val currentSongInfo = SongUiDto(s.title, s.artist, showToast = true)
+            val nextSongInfo = playlistNext()?.let {
+                SongUiDto(it.title, it.artist)
+            }
 
             viewModelScope.launch {
-                _nowPlaying.emit(info)
+                _nowPlaying.emit(currentSongInfo)
+                _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
                 _nowPlaying.emit(null)
+                _upNext.emit(null)
             }
         }
     }
@@ -229,6 +256,23 @@ class PlayerViewModel: ViewModel() {
             }
         }
         return -1
+    }
+
+    fun getAlbumArt(song: Song?, context: Context?) {
+        context ?: return // Can't do much with a null context...
+
+        val roundedAlbumArt = song?.let {
+            val albumArtBitmap = factory.getAlbumArt(context, song.albumId)
+            return@let factory.getRoundedCornerBitmap(albumArtBitmap, 50)
+        } ?: BitmapFactory.decodeResource(context.resources, R.drawable.octave) // Default to the app logo if null.
+
+        viewModelScope.launch {
+            _albumArt.emit(roundedAlbumArt)
+        }
+    }
+
+    companion object {
+        private const val fileUriPrefix = "file:///"
     }
 
 }

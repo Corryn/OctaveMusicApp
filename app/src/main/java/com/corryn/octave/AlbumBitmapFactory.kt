@@ -1,7 +1,7 @@
 package com.corryn.octave
 
-import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -16,13 +16,13 @@ import java.io.InputStream
 
 class AlbumBitmapFactory {
 
-    fun getAlbumArt(cr: ContentResolver?, albumId: Long): Bitmap? {
+    fun getAlbumArt(context: Context?, albumId: Long): Bitmap? {
         val inputStream: InputStream?
         val sArtworkUri = Uri.parse(albumArtUri)
         val uri = ContentUris.withAppendedId(sArtworkUri, albumId)
 
         inputStream = try {
-            cr?.openInputStream(uri)
+            context?.contentResolver?.openInputStream(uri)
         } catch (e: FileNotFoundException) {
             return null
         }
