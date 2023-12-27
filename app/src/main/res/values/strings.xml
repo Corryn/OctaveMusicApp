@@ -4,6 +4,7 @@
     <string name="title_activity_player">PlayerActivity</string>
     <string name="title_activity_game">GameActivity</string>
 
-    <string name="now_playing">Now Playing: %1$s - %2$s</string>
-    <string name="up_next">Up Next: %1$s - %2$s</string>
+    <string name="now_playing">Now Playing: %s - %s</string>
+    <string name="up_next">Up Next: %s - %s</string>
+    <string name="player_error">File not found!</string>
 </resources>

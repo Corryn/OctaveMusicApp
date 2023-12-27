@@ -23,6 +23,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,6 +35,9 @@ import com.corryn.octave.model.Song
 import com.corryn.octave.ui.ArtistAdapter
 import com.corryn.octave.ui.SongAdapter
 import com.corryn.octave.ui.base.BaseFragment
+import com.corryn.octave.viewmodel.PlayerViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionListener {
@@ -39,6 +46,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         get() = FragmentPlayerBinding::inflate
 
     private val player = Player
+    private val vM: PlayerViewModel by activityViewModels()
 
     private var viewingSongs = false
 
@@ -65,6 +73,22 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         setUpTouchInteractions()
 
         setSongListLayout(this.resources.configuration.orientation)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+                launch {
+                    vM.nowPlaying.collectLatest {
+                        val message = if (it != null) {
+                            getString(R.string.now_playing, it.title, it.artist)
+                        } else {
+                            getString(R.string.player_error)
+                        }
+
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {

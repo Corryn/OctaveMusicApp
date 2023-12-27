@@ -36,12 +36,15 @@ object Player {
     private val playlist = LinkedList<Song>()
 
     private var context: Context? = null
+
     private var nowPlaying = -1
     private var songNowPlaying: Song? = null
     var selected = -1
+
     private var active = false
     private var repeat = false
     private var shuffle = false
+
     var playClicked = false
     var isSearching = false
 
@@ -257,4 +260,5 @@ object Player {
         }
         return null
     }
+
 }
