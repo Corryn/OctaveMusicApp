@@ -17,9 +17,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
@@ -27,7 +25,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.corryn.octave.databinding.FragmentPlayerBinding
 import com.corryn.octave.model.Song
 import com.corryn.octave.ui.ArtistAdapter
@@ -40,33 +37,18 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentPlayerBinding
         get() = FragmentPlayerBinding::inflate
 
+    val player = Player
+
+    private var menuOpen = false
+    private var viewingSongs = false
+
+    private val songAdapter = SongAdapter(::onSongClicked, ::onPlayClicked, ::onAddClicked)
+    private val artistAdapter: ArtistAdapter = ArtistAdapter(::onArtistClicked)
+
     private var x1 = 0f
     private var x2 = 0f
     private var y1 = 0f
     private var y2 = 0f
-
-    val player = Player
-
-    var menuOpen = false
-    var viewingSongs = false
-
-    var upNext: TextView? = null
-    var artistLabel: TextView? = null
-    var searchBar: TextView? = null
-    var clearSearch: TextView? = null
-    var pause: ImageView? = null
-    var previous: ImageView? = null
-    var next: ImageView? = null
-    var repeat: ImageView? = null
-    var shuffle: ImageView? = null
-    var downArrow: ImageView? = null
-    var mainArt: ImageView? = null
-    var menu: RelativeLayout? = null
-
-    var playerMenuList: RecyclerView? = null
-    var songAdapter: SongAdapter = SongAdapter(::onSongClicked, ::onPlayClicked, ::onAddClicked)
-    var artistAdapter: ArtistAdapter = ArtistAdapter(::onArtistClicked)
-    var playerMenuArt: ImageView? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -75,12 +57,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             handleBackPressed()
         }
 
-        menu = binding.playerMenu
-        playerMenuList = binding.playerMenuList
-        playerMenuArt = binding.playerMenuArt
-        artistLabel = binding.artistLabel
-
-        playerMenuList?.apply {
+        binding.playerMenuList.apply {
             layoutManager = LinearLayoutManager(context)
             addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL).apply {
                 ContextCompat.getDrawable(context, R.drawable.blank_divider)?.let {
@@ -94,8 +71,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
         player.resetItemColor()
 
-        upNext = binding.playlistUpNext
-
         // Required for the text marquee to function.
         binding.playerNowPlaying.isSelected = true
 
@@ -108,7 +83,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         setUpRepeatButton()
         setUpShuffleButton()
 
-        binding.root.setOnTouchListener(object: View.OnTouchListener {
+        binding.root.setOnTouchListener(object : View.OnTouchListener {
             override fun onTouch(view: View?, event: MotionEvent?): Boolean {
                 handleTouchEvent(event)
 
@@ -116,23 +91,20 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             }
         })
 
-        mainArt = binding.mainart
-        mainArt?.setOnTouchListener { _, _ -> false }
+        binding.mainart.setOnTouchListener { _, _ -> false }
 
         setSongListLayout(this.resources.configuration.orientation)
         resume()
     }
 
-    private fun setUpSearchBar() {
-        searchBar = binding.searchBar
-
-        searchBar?.setOnEditorActionListener(this)
-        searchBar?.addTextChangedListener(object : TextWatcher {
+    private fun setUpSearchBar() = with(binding) {
+        searchBar.setOnEditorActionListener(this@PlayerFragment)
+        searchBar.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 val searchString = s.toString().trim { it <= ' ' }
-                playerMenuList?.apply {
+                playerMenuList.apply {
                     adapter = songAdapter.also {
                         it.submitList(player.filterSongs(searchString))
                     }
@@ -144,32 +116,29 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         })
     }
 
-    private fun setUpClearButton() {
-        clearSearch = binding.clearSearch
-        clearSearch?.setOnClickListener { v ->
+    private fun setUpClearButton() = with(binding) {
+        clearSearch.setOnClickListener { v ->
             val animation: Animation = AlphaAnimation(0.3f, 1.0f)
             animation.duration = 500
             v.startAnimation(animation)
-            if (searchBar?.text.toString() != "") {
+            if (searchBar.text.toString() != "") {
                 player.isSearching = false
-                searchBar?.text = ""
+                searchBar.text?.clear()
             }
         }
     }
 
-    private fun setUpMenuButton() {
-        downArrow = binding.downarrow
-        downArrow?.setOnClickListener { openMenu() }
+    private fun setUpMenuButton() = with(binding) {
+        downarrow.setOnClickListener { openMenu() }
     }
 
-    private fun setUpPauseButton() {
-        pause = binding.pause
-        pause?.setOnClickListener {
+    private fun setUpPauseButton() = with(binding) {
+        pause.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 pause()
             } else if (!player.playlistIsEmpty()) {
                 player.nextSong()
-                pause?.setImageResource(R.drawable.octavepause)
+                pause.setImageResource(R.drawable.octavepause)
                 setUpNext()
             } else {
                 noSongPicked()
@@ -177,9 +146,8 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    private fun setUpNextButton() {
-        next = binding.next
-        next?.setOnClickListener {
+    private fun setUpNextButton() = with(binding) {
+        next.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 nextSongClick()
             } else {
@@ -188,9 +156,8 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    private fun setUpPreviousButton() {
-        previous = binding.previous
-        previous?.setOnClickListener {
+    private fun setUpPreviousButton() = with(binding) {
+        previous.setOnClickListener {
             if (player.getNowPlaying() != null) {
                 prevSongClick()
             } else {
@@ -199,30 +166,28 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    private fun setUpRepeatButton() {
-        repeat = binding.repeat
-        repeat?.setOnClickListener {
+    private fun setUpRepeatButton() = with(binding) {
+        repeat.setOnClickListener {
             val res = player.toggleRepeat()
             if (res) {
                 Toast.makeText(requireContext(), "Repeat on", Toast.LENGTH_SHORT).show()
-                repeat?.setImageResource(R.drawable.octaverepeatactive)
+                repeat.setImageResource(R.drawable.octaverepeatactive)
             } else {
                 Toast.makeText(requireContext(), "Repeat off", Toast.LENGTH_SHORT).show()
-                repeat?.setImageResource(R.drawable.octaverepeat)
+                repeat.setImageResource(R.drawable.octaverepeat)
             }
         }
     }
 
-    private fun setUpShuffleButton() {
-        shuffle = binding.shuffle
-        shuffle?.setOnClickListener {
+    private fun setUpShuffleButton() = with(binding) {
+        shuffle.setOnClickListener {
             val res = player.toggleShuffle()
             if (res) {
                 Toast.makeText(requireContext(), "Shuffle on", Toast.LENGTH_SHORT).show()
-                shuffle?.setImageResource(R.drawable.octaveshuffleactive)
+                shuffle.setImageResource(R.drawable.octaveshuffleactive)
             } else {
                 Toast.makeText(requireContext(), "Shuffle off", Toast.LENGTH_SHORT).show()
-                shuffle?.setImageResource(R.drawable.octaveshuffle)
+                shuffle.setImageResource(R.drawable.octaveshuffle)
             }
         }
     }
@@ -246,7 +211,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
 
         if (player.selected != -1) {
-            playerMenuList?.scrollToPosition(player.selected)
+            binding.playerMenuList.scrollToPosition(player.selected)
         }
 
         updateAlbumArt(player.selectedSong)
@@ -269,7 +234,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
-            playerMenuList?.apply {
+            binding.playerMenuList.apply {
                 adapter = songAdapter.also {
                     it.submitList(player.filterSongs(searchString))
                 }
@@ -286,21 +251,21 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         setSongListLayout(newConfig.orientation)
     }
 
-    private fun setSongListLayout(config: Int) {
+    private fun setSongListLayout(config: Int) = with(binding) {
         if (config == Configuration.ORIENTATION_LANDSCAPE) {
-            playerMenuList?.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
+            playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
 
             val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
             val resources = requireContext().resources
             val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
 
             params.setMargins(px, px, px, px)
-            playerMenuArt?.layoutParams = params
-            mainArt?.setImageResource(R.drawable.octavesplashlandscape)
+            playerMenuArt.layoutParams = params
+            mainart.setImageResource(R.drawable.octavesplashlandscape)
         } else if (config == Configuration.ORIENTATION_PORTRAIT) {
-            playerMenuList?.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-            playerMenuArt?.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0f)
-            mainArt?.setImageResource(R.drawable.octavesplashportrait)
+            playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+            playerMenuArt.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0f)
+            mainart.setImageResource(R.drawable.octavesplashportrait)
         }
     }
 
@@ -316,21 +281,21 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    private fun returnToArtistList() {
-        searchBar?.text = ""
+    private fun returnToArtistList() = with(binding) {
+        searchBar.text?.clear()
         player.isSearching = false
 
-        searchBar?.visibility = View.INVISIBLE
-        clearSearch?.visibility = View.INVISIBLE
-        artistLabel?.visibility = View.VISIBLE
+        searchBar.visibility = View.INVISIBLE
+        clearSearch.visibility = View.INVISIBLE
+        artistLabel.visibility = View.VISIBLE
 
         player.viewedList = null
 
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
-        playerMenuList?.startAnimation(animation)
+        playerMenuList.startAnimation(animation)
 
-        playerMenuList?.adapter = artistAdapter
+        playerMenuList.adapter = artistAdapter
         songAdapter.submitList(emptyList())
         updateAlbumArt(null)
         viewingSongs = false
@@ -374,20 +339,20 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     private fun pause() {
         if (player.isPaused) {
             player.unpauseSong()
-            pause?.setImageResource(R.drawable.octavepause)
+            binding.pause.setImageResource(R.drawable.octavepause)
         } else {
             player.pauseSong()
-            pause?.setImageResource(R.drawable.octaveplay)
+            binding.pause.setImageResource(R.drawable.octaveplay)
         }
     }
 
     private fun openMenu() {
         if (!menuOpen) {
             menuOpen = true
-            menu?.visibility = View.VISIBLE
+            binding.playerMenu.visibility = View.VISIBLE
 
             val animationSlideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slideinmenu)
-            menu?.startAnimation(animationSlideIn)
+            binding.playerMenu.startAnimation(animationSlideIn)
         }
     }
 
@@ -399,8 +364,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             setUpNext()
 
             val animationSlideOut = AnimationUtils.loadAnimation(requireContext(), R.anim.slideoutmenu)
-            menu?.startAnimation(animationSlideOut)
-            menu?.visibility = View.GONE
+            binding.playerMenu.apply {
+                startAnimation(animationSlideOut)
+                visibility = View.GONE
+            }
         }
     }
 
@@ -417,7 +384,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             player.nextSong()
             setNowPlaying()
             setUpNext()
-            pause?.setImageResource(R.drawable.octavepause)
+            binding.pause.setImageResource(R.drawable.octavepause)
         }
     }
 
@@ -426,7 +393,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             if (player.playlistIsEmpty()) {
                 player.prevSong()
                 setNowPlaying()
-                pause?.setImageResource(R.drawable.octavepause)
+                binding.pause.setImageResource(R.drawable.octavepause)
             } else {
                 Toast.makeText(requireContext(), "Disabled during queue playback.", Toast.LENGTH_SHORT).show()
             }
@@ -440,59 +407,60 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
     }
 
-    private fun setUpNext() {
+    private fun setUpNext() = with(binding) {
         val song = player.playlistNext()
         if (song != null) {
-            upNext?.visibility = View.VISIBLE
-            upNext?.text = getString(R.string.up_next, song.title, song.artist)
+            binding.playlistUpNext.visibility = View.VISIBLE
+            binding.playlistUpNext.text = getString(R.string.up_next, song.title, song.artist)
         } else {
-            upNext?.visibility = View.GONE
+            binding.playlistUpNext.visibility = View.GONE
         }
     }
 
-    private fun updateAlbumArt(song: Song?) {
+    private fun updateAlbumArt(song: Song?) = with(binding) {
         if (song != null) {
             val albumArt = player.getAlbumArt(activity?.contentResolver, song.albumId)
             if (albumArt != null) {
-                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(activity?.contentResolver, song.albumId), 50))
+                playerMenuArt.setImageBitmap(player.getRoundedCornerBitmap(player.getAlbumArt(activity?.contentResolver, song.albumId), 50))
             } else {
                 val logo = BitmapFactory.decodeResource(
                     requireContext().resources,
                     R.drawable.octave
                 )
-                playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
+                playerMenuArt.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
             }
         } else {
             val logo = BitmapFactory.decodeResource(
                 requireContext().resources,
                 R.drawable.octave
             )
-            playerMenuArt?.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
+            playerMenuArt.setImageBitmap(player.getRoundedCornerBitmap(logo, 50))
         }
     }
 
     private fun onArtistClicked(artist: String) {
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
-        playerMenuList?.startAnimation(animation)
+        binding.playerMenuList.startAnimation(animation)
 
         val artistSongs: List<Song> = player.byArtistList[artist] ?: return
 
-        playerMenuList?.adapter = songAdapter.also {
+        binding.playerMenuList.adapter = songAdapter.also {
             it.submitList(artistSongs)
         }
 
         player.viewedList = artistSongs
 
-        artistLabel?.visibility = View.INVISIBLE
-        searchBar?.visibility = View.VISIBLE
-        clearSearch?.visibility = View.VISIBLE
+        binding.artistLabel.visibility = View.INVISIBLE
+        binding.searchBar.visibility = View.VISIBLE
+        binding.clearSearch.visibility = View.VISIBLE
+
         viewingSongs = true
     }
 
     private fun onSongClicked(song: Song, position: Int) {
         if (player.playClicked) {
-            pause?.setImageResource(R.drawable.octavepause)
+            binding.pause.setImageResource(R.drawable.octavepause)
             player.playClicked = false
         }
 

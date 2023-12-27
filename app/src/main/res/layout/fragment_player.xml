@@ -34,7 +34,6 @@
             app:layout_constraintEnd_toStartOf="@id/downarrow"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- TODO Move this and any other non-launcher mipmaps to drawable. -->
         <ImageView
             android:id="@+id/downarrow"
             android:layout_width="40dp"
