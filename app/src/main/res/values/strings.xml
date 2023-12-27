@@ -6,10 +6,11 @@
     <string name="shuffle_on">Shuffle on</string>
     <string name="shuffle_off">Shuffle off</string>
 
+    <string name="no_song_active_message">Swipe down and pick a song first!</string>
     <string name="now_playing_default">Swipe down to start!</string>
     <string name="now_playing">Now Playing: %s - %s</string>
     <string name="up_next">Up Next: %s - %s</string>
-    <string name="player_error">File not found!</string>
+    <string name="file_not_found_error">File not found!</string>
 
     <string name="added_to_queue">%s added to queue!</string>
     <string name="next_prev_queue_message">Disabled during queue playback.</string>

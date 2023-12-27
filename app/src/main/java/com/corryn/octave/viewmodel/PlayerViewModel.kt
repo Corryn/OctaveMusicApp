@@ -45,14 +45,21 @@ class PlayerViewModel: ViewModel() {
     var isSearching = false
 
     // Emitting a value of null indicates there was an error trying to play the song.
-    private val _nowPlaying: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
-    val nowPlaying: SharedFlow<SongUiDto?> = _nowPlaying.asSharedFlow()
+    private val _nowPlayingBar: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
+    val nowPlayingBar: SharedFlow<SongUiDto?> = _nowPlayingBar.asSharedFlow()
+
+    private val _nowPlayingMessage: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
+    val nowPlayingMessage: SharedFlow<SongUiDto?> = _nowPlayingMessage.asSharedFlow()
 
     private val _upNext: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
     val upNext: SharedFlow<SongUiDto?> = _upNext.asSharedFlow()
 
     private val _albumArt: MutableSharedFlow<Bitmap?> = MutableSharedFlow()
     val albumArt: SharedFlow<Bitmap?> = _albumArt.asSharedFlow()
+
+    // Expects a string resource.
+    private val _errorMessage: MutableSharedFlow<Int> = MutableSharedFlow()
+    val errorMessage: SharedFlow<Int> = _errorMessage.asSharedFlow()
 
     fun preparePlayer(context: Context?) {
         player.setOnCompletionListener {
@@ -62,14 +69,14 @@ class PlayerViewModel: ViewModel() {
 
     fun updateNowPlayingAndUpNext() {
         val currentSongInfo = songNowPlaying?.let {
-            SongUiDto(it.title, it.artist, showToast = false)
+            SongUiDto(it.title, it.artist)
         }
         val nextSongInfo = playlistNext()?.let {
-            SongUiDto(it.title, it.artist, showToast = false)
+            SongUiDto(it.title, it.artist)
         }
 
         viewModelScope.launch {
-            _nowPlaying.emit(currentSongInfo)
+            _nowPlayingBar.emit(currentSongInfo)
             _upNext.emit(nextSongInfo)
         }
     }
@@ -186,19 +193,21 @@ class PlayerViewModel: ViewModel() {
             songNowPlaying = temp
 
             val song = activeList!![songIndex]!!
-            val currentSongInfo = SongUiDto(song.title, song.artist, showToast = true)
+            val currentSongInfo = SongUiDto(song.title, song.artist)
             val nextSongInfo = playlistNext()?.let {
                 SongUiDto(it.title, it.artist)
             }
 
             viewModelScope.launch {
-                _nowPlaying.emit(currentSongInfo)
+                _nowPlayingBar.emit(currentSongInfo)
+                _nowPlayingMessage.emit(currentSongInfo)
                 _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
-                _nowPlaying.emit(null)
+                _nowPlayingBar.emit(null)
                 _upNext.emit(null)
+                _errorMessage.emit(R.string.file_not_found_error)
             }
         }
     }
@@ -224,19 +233,21 @@ class PlayerViewModel: ViewModel() {
             nowPlayingIndex = activeList!!.indexOf(s)
             songNowPlaying = s
 
-            val currentSongInfo = SongUiDto(s.title, s.artist, showToast = true)
+            val currentSongInfo = SongUiDto(s.title, s.artist)
             val nextSongInfo = playlistNext()?.let {
                 SongUiDto(it.title, it.artist)
             }
 
             viewModelScope.launch {
-                _nowPlaying.emit(currentSongInfo)
+                _nowPlayingBar.emit(currentSongInfo)
+                _nowPlayingMessage.emit(currentSongInfo)
                 _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
-                _nowPlaying.emit(null)
+                _nowPlayingBar.emit(null)
                 _upNext.emit(null)
+                _errorMessage.emit(R.string.file_not_found_error)
             }
         }
     }

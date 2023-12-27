@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -41,7 +42,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-// TODO Previously showed an error toast if the song data was null. Create another flow for errors and show a dialog?
+// TODO Error dialog instead of error toast?
 class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionListener {
 
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentPlayerBinding
@@ -79,8 +80,14 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 launch {
-                    vM.nowPlaying.collectLatest {
+                    vM.nowPlayingBar.collectLatest {
                         setNowPlaying(it)
+                    }
+                }
+
+                launch {
+                    vM.nowPlayingMessage.collectLatest {
+                        showNowPlayingToast(it)
                     }
                 }
 
@@ -95,6 +102,12 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
                         setAlbumArt(it)
                     }
                 }
+
+                launch {
+                    vM.errorMessage.collectLatest {
+                        showErrorToast(it)
+                    }
+                }
             }
         }
     }
@@ -102,7 +115,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     override fun onResume() {
         super.onResume()
 
-        with (vM) {
+        with(vM) {
             preparePlayer(context)
             updateNowPlayingAndUpNext()
             getAlbumArt(vM.selectedSong, context)
@@ -193,10 +206,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         repeat.setOnClickListener {
             val res = vM.toggleRepeat()
             if (res) {
-                Toast.makeText(requireContext(), getString(R.string.repeat_on), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.repeat_on), Toast.LENGTH_SHORT).show()
                 repeat.setImageResource(R.drawable.octaverepeatactive)
             } else {
-                Toast.makeText(requireContext(), getString(R.string.repeat_off), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.repeat_off), Toast.LENGTH_SHORT).show()
                 repeat.setImageResource(R.drawable.octaverepeat)
             }
         }
@@ -204,10 +217,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         shuffle.setOnClickListener {
             val res = vM.toggleShuffle()
             if (res) {
-                Toast.makeText(requireContext(), getString(R.string.shuffle_on), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.shuffle_on), Toast.LENGTH_SHORT).show()
                 shuffle.setImageResource(R.drawable.octaveshuffleactive)
             } else {
-                Toast.makeText(requireContext(), getString(R.string.shuffle_off), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.shuffle_off), Toast.LENGTH_SHORT).show()
                 shuffle.setImageResource(R.drawable.octaveshuffle)
             }
         }
@@ -226,7 +239,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun noSongPicked() {
-        Toast.makeText(requireContext(), "Swipe down and pick a song first!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.no_song_active_message), Toast.LENGTH_SHORT).show()
     }
 
     override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
@@ -264,20 +277,24 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun setSongListLayout(config: Int) = with(binding) {
-        if (config == Configuration.ORIENTATION_LANDSCAPE) {
-            playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
+        when (config) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
 
-            val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
-            val resources = requireContext().resources
-            val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
+                val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
+                val resources = requireContext().resources
+                val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
 
-            params.setMargins(px, px, px, px)
-            playerMenuArt.layoutParams = params
-            mainart.setImageResource(R.drawable.octavesplashlandscape)
-        } else if (config == Configuration.ORIENTATION_PORTRAIT) {
-            playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-            playerMenuArt.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0f)
-            mainart.setImageResource(R.drawable.octavesplashportrait)
+                params.setMargins(px, px, px, px)
+                playerMenuArt.layoutParams = params
+                mainart.setImageResource(R.drawable.octavesplashlandscape)
+            }
+
+            Configuration.ORIENTATION_PORTRAIT -> {
+                playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                playerMenuArt.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0f)
+                mainart.setImageResource(R.drawable.octavesplashportrait)
+            }
         }
     }
 
@@ -342,14 +359,14 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         if (isMenuOpen().not()) {
             binding.playerMenu.isVisible = true
 
-            val animationSlideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slideinmenu)
+            val animationSlideIn = AnimationUtils.loadAnimation(context, R.anim.slideinmenu)
             binding.playerMenu.startAnimation(animationSlideIn)
         }
     }
 
     private fun closeMenu() {
         if (isMenuOpen()) {
-            val animationSlideOut = AnimationUtils.loadAnimation(requireContext(), R.anim.slideoutmenu)
+            val animationSlideOut = AnimationUtils.loadAnimation(context, R.anim.slideoutmenu)
 
             binding.playerMenu.apply {
                 startAnimation(animationSlideOut)
@@ -391,7 +408,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
                 vM.prevSong(context)
                 binding.pause.setImageResource(R.drawable.octavepause)
             } else {
-                Toast.makeText(requireContext(), getString(R.string.next_prev_queue_message), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.next_prev_queue_message), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -402,15 +419,17 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         } else {
             getString(R.string.now_playing_default)
         }
+    }
 
-        val toastMessage = if (song != null && song.showToast) {
+    private fun showNowPlayingToast(song: SongUiDto?) {
+        val toastMessage = if (song != null) {
             getString(R.string.now_playing, song.title, song.artist)
         } else {
             null
         }
 
         toastMessage?.let {
-            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -482,7 +501,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         vM.addToPlaylist(song)
 
         val message = getString(R.string.added_to_queue, song.title)
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showErrorToast(@StringRes errorRes: Int) {
+        Toast.makeText(context, errorRes, Toast.LENGTH_SHORT).show()
     }
 
     companion object {
