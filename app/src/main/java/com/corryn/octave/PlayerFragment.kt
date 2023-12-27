@@ -22,6 +22,7 @@ import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,7 +40,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
     val player = Player
 
-    private var menuOpen = false
     private var viewingSongs = false
 
     private val songAdapter = SongAdapter(::onSongClicked, ::onPlayClicked, ::onAddClicked)
@@ -95,6 +95,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
         setSongListLayout(this.resources.configuration.orientation)
         resume()
+    }
+
+    private fun isMenuOpen(): Boolean {
+        return binding.playerMenu.isVisible
     }
 
     private fun setUpSearchBar() = with(binding) {
@@ -270,7 +274,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun handleBackPressed() {
-        if (menuOpen) {
+        if (isMenuOpen()) {
             if (viewingSongs) {
                 returnToArtistList()
             } else {
@@ -322,7 +326,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
                 } else if (abs(deltaX) > MIN_DISTANCE && x1 > x2) {
                     nextSongClick()
                 } else {
-                    if (!menuOpen) {
+                    if (isMenuOpen().not()) {
                         if (!player.playlistIsEmpty()) {
                             nextSongClick()
                         } else if (player.getNowPlaying() != null) {
@@ -347,9 +351,8 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun openMenu() {
-        if (!menuOpen) {
-            menuOpen = true
-            binding.playerMenu.visibility = View.VISIBLE
+        if (isMenuOpen().not()) {
+            binding.playerMenu.isVisible = true
 
             val animationSlideIn = AnimationUtils.loadAnimation(requireContext(), R.anim.slideinmenu)
             binding.playerMenu.startAnimation(animationSlideIn)
@@ -357,16 +360,14 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun closeMenu() {
-        if (menuOpen) {
-            menuOpen = false
-
+        if (isMenuOpen()) {
             setNowPlaying()
             setUpNext()
 
             val animationSlideOut = AnimationUtils.loadAnimation(requireContext(), R.anim.slideoutmenu)
             binding.playerMenu.apply {
                 startAnimation(animationSlideOut)
-                visibility = View.GONE
+                isVisible = false
             }
         }
     }
