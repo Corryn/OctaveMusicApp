@@ -19,17 +19,22 @@ import com.corryn.octave.model.Song
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
+import java.util.LinkedList
+import java.util.Random
 
 
 object Player {
+
+    val player = MediaPlayer()
+
     val songList = mutableListOf<Song>()
     val artistList = mutableListOf<String>()
     val byArtistList = HashMap<String, MutableList<Song>>()
     var activeList: List<Song?>? = null
     var viewedList: List<Song>? = null
+
     private val playlist = LinkedList<Song>()
-    val player = MediaPlayer()
+
     private var context: Context? = null
     private var nowPlaying = -1
     private var songNowPlaying: Song? = null
@@ -38,7 +43,6 @@ object Player {
     private var repeat = false
     private var shuffle = false
     var playClicked = false
-    private var itemColor = false
     var isSearching = false
 
     fun setActive() {
@@ -55,15 +59,6 @@ object Player {
 
     fun unpauseSong() {
         player.start()
-    }
-
-    fun getItemColor(): Boolean {
-        itemColor = !itemColor
-        return itemColor
-    }
-
-    fun resetItemColor() {
-        itemColor = false
     }
 
     val isPaused: Boolean

@@ -38,7 +38,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentPlayerBinding
         get() = FragmentPlayerBinding::inflate
 
-    val player = Player
+    private val player = Player
 
     private var viewingSongs = false
 
@@ -57,156 +57,19 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             handleBackPressed()
         }
 
-        binding.playerMenuList.apply {
-            layoutManager = LinearLayoutManager(context)
-            addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL).apply {
-                ContextCompat.getDrawable(context, R.drawable.blank_divider)?.let {
-                    setDrawable(it)
-                }
-            })
-            adapter = artistAdapter.also {
-                it.submitList(player.artistList)
-            }
-        }
-
-        player.resetItemColor()
-
         // Required for the text marquee to function.
         binding.playerNowPlaying.isSelected = true
 
-        setUpMenuButton()
-        setUpSearchBar()
-        setUpClearButton()
-        setUpPauseButton()
-        setUpNextButton()
-        setUpPreviousButton()
-        setUpRepeatButton()
-        setUpShuffleButton()
-
-        binding.root.setOnTouchListener(object : View.OnTouchListener {
-            override fun onTouch(view: View?, event: MotionEvent?): Boolean {
-                handleTouchEvent(event)
-
-                return true
-            }
-        })
-
-        binding.mainart.setOnTouchListener { _, _ -> false }
+        setUpControlButtons()
+        setUpMenuInteractions()
+        setUpTouchInteractions()
 
         setSongListLayout(this.resources.configuration.orientation)
-        resume()
     }
 
-    private fun isMenuOpen(): Boolean {
-        return binding.playerMenu.isVisible
-    }
-
-    private fun setUpSearchBar() = with(binding) {
-        searchBar.setOnEditorActionListener(this@PlayerFragment)
-        searchBar.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                val searchString = s.toString().trim { it <= ' ' }
-                playerMenuList.apply {
-                    adapter = songAdapter.also {
-                        it.submitList(player.filterSongs(searchString))
-                    }
-                }
-                player.isSearching = searchString != ""
-            }
-
-            override fun afterTextChanged(s: Editable) {}
-        })
-    }
-
-    private fun setUpClearButton() = with(binding) {
-        clearSearch.setOnClickListener { v ->
-            val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-            animation.duration = 500
-            v.startAnimation(animation)
-            if (searchBar.text.toString() != "") {
-                player.isSearching = false
-                searchBar.text?.clear()
-            }
-        }
-    }
-
-    private fun setUpMenuButton() = with(binding) {
-        downarrow.setOnClickListener { openMenu() }
-    }
-
-    private fun setUpPauseButton() = with(binding) {
-        pause.setOnClickListener {
-            if (player.getNowPlaying() != null) {
-                pause()
-            } else if (!player.playlistIsEmpty()) {
-                player.nextSong()
-                pause.setImageResource(R.drawable.octavepause)
-                setUpNext()
-            } else {
-                noSongPicked()
-            }
-        }
-    }
-
-    private fun setUpNextButton() = with(binding) {
-        next.setOnClickListener {
-            if (player.getNowPlaying() != null) {
-                nextSongClick()
-            } else {
-                noSongPicked()
-            }
-        }
-    }
-
-    private fun setUpPreviousButton() = with(binding) {
-        previous.setOnClickListener {
-            if (player.getNowPlaying() != null) {
-                prevSongClick()
-            } else {
-                noSongPicked()
-            }
-        }
-    }
-
-    private fun setUpRepeatButton() = with(binding) {
-        repeat.setOnClickListener {
-            val res = player.toggleRepeat()
-            if (res) {
-                Toast.makeText(requireContext(), "Repeat on", Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeatactive)
-            } else {
-                Toast.makeText(requireContext(), "Repeat off", Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeat)
-            }
-        }
-    }
-
-    private fun setUpShuffleButton() = with(binding) {
-        shuffle.setOnClickListener {
-            val res = player.toggleShuffle()
-            if (res) {
-                Toast.makeText(requireContext(), "Shuffle on", Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffleactive)
-            } else {
-                Toast.makeText(requireContext(), "Shuffle off", Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffle)
-            }
-        }
-    }
-
-    private fun noSongPicked() {
-        Toast.makeText(requireContext(), "Swipe down and pick a song first!", Toast.LENGTH_SHORT).show()
-    }
-
-    public override fun onResume() {
+    override fun onResume() {
         super.onResume()
 
-        resume()
-    }
-
-    private fun resume() {
         player.updateContext(requireContext())
         updateCompletionListener()
 
@@ -219,6 +82,123 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         }
 
         updateAlbumArt(player.selectedSong)
+    }
+
+    private fun isMenuOpen(): Boolean {
+        return binding.playerMenu.isVisible
+    }
+
+    private fun setUpMenuInteractions() = with(binding) {
+        playerMenuList.apply {
+            layoutManager = LinearLayoutManager(context)
+            addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL).apply {
+                ContextCompat.getDrawable(context, R.drawable.blank_divider)?.let {
+                    setDrawable(it)
+                }
+            })
+            adapter = artistAdapter.also {
+                it.submitList(player.artistList)
+            }
+        }
+
+        searchBar.apply {
+            setOnEditorActionListener(this@PlayerFragment)
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                    val searchString = s.toString().trim { it <= ' ' }
+                    playerMenuList.apply {
+                        adapter = songAdapter.also {
+                            it.submitList(player.filterSongs(searchString))
+                        }
+                    }
+                    player.isSearching = searchString != ""
+                }
+
+                override fun afterTextChanged(s: Editable) {}
+            })
+        }
+
+        clearSearch.setOnClickListener { v ->
+            val animation: Animation = AlphaAnimation(0.3f, 1.0f)
+            animation.duration = 500
+            v.startAnimation(animation)
+            if (searchBar.text.toString() != "") {
+                player.isSearching = false
+                searchBar.text?.clear()
+            }
+        }
+
+        downarrow.setOnClickListener { openMenu() }
+    }
+
+    private fun setUpControlButtons() = with(binding) {
+        pause.setOnClickListener {
+            if (player.getNowPlaying() != null) {
+                pause()
+            } else if (!player.playlistIsEmpty()) {
+                player.nextSong()
+                pause.setImageResource(R.drawable.octavepause)
+                setUpNext()
+            } else {
+                noSongPicked()
+            }
+        }
+
+        next.setOnClickListener {
+            if (player.getNowPlaying() != null) {
+                nextSongClick()
+            } else {
+                noSongPicked()
+            }
+        }
+
+        previous.setOnClickListener {
+            if (player.getNowPlaying() != null) {
+                prevSongClick()
+            } else {
+                noSongPicked()
+            }
+        }
+
+        repeat.setOnClickListener {
+            val res = player.toggleRepeat()
+            if (res) {
+                Toast.makeText(requireContext(), "Repeat on", Toast.LENGTH_SHORT).show()
+                repeat.setImageResource(R.drawable.octaverepeatactive)
+            } else {
+                Toast.makeText(requireContext(), "Repeat off", Toast.LENGTH_SHORT).show()
+                repeat.setImageResource(R.drawable.octaverepeat)
+            }
+        }
+
+        shuffle.setOnClickListener {
+            val res = player.toggleShuffle()
+            if (res) {
+                Toast.makeText(requireContext(), "Shuffle on", Toast.LENGTH_SHORT).show()
+                shuffle.setImageResource(R.drawable.octaveshuffleactive)
+            } else {
+                Toast.makeText(requireContext(), "Shuffle off", Toast.LENGTH_SHORT).show()
+                shuffle.setImageResource(R.drawable.octaveshuffle)
+            }
+        }
+    }
+
+    private fun setUpTouchInteractions() = with(binding) {
+        root.setOnTouchListener(object : View.OnTouchListener {
+            override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+                handleTouchEvent(event)
+
+                return true
+            }
+        })
+
+        mainart.setOnTouchListener { _, _ -> false }
+    }
+
+    private fun noSongPicked() {
+        Toast.makeText(requireContext(), "Swipe down and pick a song first!", Toast.LENGTH_SHORT).show()
     }
 
     override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
@@ -283,26 +263,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         } else {
             findNavController().popBackStack()
         }
-    }
-
-    private fun returnToArtistList() = with(binding) {
-        searchBar.text?.clear()
-        player.isSearching = false
-
-        searchBar.visibility = View.INVISIBLE
-        clearSearch.visibility = View.INVISIBLE
-        artistLabel.visibility = View.VISIBLE
-
-        player.viewedList = null
-
-        val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-        animation.duration = 500
-        playerMenuList.startAnimation(animation)
-
-        playerMenuList.adapter = artistAdapter
-        songAdapter.submitList(emptyList())
-        updateAlbumArt(null)
-        viewingSongs = false
     }
 
     private fun handleTouchEvent(event: MotionEvent?): Boolean {
@@ -370,6 +330,26 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
                 isVisible = false
             }
         }
+    }
+
+    private fun returnToArtistList() = with(binding) {
+        searchBar.text?.clear()
+        player.isSearching = false
+
+        searchBar.visibility = View.INVISIBLE
+        clearSearch.visibility = View.INVISIBLE
+        artistLabel.visibility = View.VISIBLE
+
+        player.viewedList = null
+
+        val animation: Animation = AlphaAnimation(0.3f, 1.0f)
+        animation.duration = 500
+        playerMenuList.startAnimation(animation)
+
+        playerMenuList.adapter = artistAdapter
+        songAdapter.submitList(emptyList())
+        updateAlbumArt(null)
+        viewingSongs = false
     }
 
     private fun updateCompletionListener() {
