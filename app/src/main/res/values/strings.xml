@@ -14,4 +14,8 @@
 
     <string name="added_to_queue">%s added to queue!</string>
     <string name="next_prev_queue_message">Disabled during queue playback.</string>
+
+    <string name="music_menu_artists">Artists</string>
+    <string name="music_menu_search_hint">Search…</string>
+    <string name="music_menu_clear">Clear</string>
 </resources>

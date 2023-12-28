@@ -8,7 +8,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.corryn.octave.AlbumBitmapFactory
+import com.corryn.octave.ui.factory.AlbumBitmapFactory
 import com.corryn.octave.R
 import com.corryn.octave.model.Song
 import com.corryn.octave.model.SongUiDto

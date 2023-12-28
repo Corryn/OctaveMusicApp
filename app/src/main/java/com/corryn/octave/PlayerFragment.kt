@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+// TODO Load music metadata on request per artist, album, etc.
 // TODO Error dialog instead of error toast?
 class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionListener {
 
