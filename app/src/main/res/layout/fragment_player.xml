@@ -10,8 +10,8 @@
         android:id="@+id/player_title_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="5dp"
         android:background="@color/octaveGray"
+        android:padding="5dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- focusable properties+singleLine seem to be needed for text marquee. -->
@@ -20,11 +20,11 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:gravity="center"
             android:marqueeRepeatLimit="marquee_forever"
             android:paddingTop="10dp"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
             android:paddingBottom="10dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
@@ -125,74 +125,13 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <RelativeLayout
+    <include
         android:id="@+id/playerMenu"
+        layout="@layout/fragment_music"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#FFFFFF"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/controls"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/artistLabel"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_margin="3dp"
-            android:gravity="center"
-            android:text="Artists"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#000000" />
-
-        <EditText
-            android:id="@+id/searchBar"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_alignParentTop="true"
-            android:layout_toLeftOf="@+id/clearSearch"
-            android:hint="Search..."
-            android:imeOptions="flagNoExtractUi"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:visibility="invisible" />
-
-        <TextView
-            android:id="@+id/clearSearch"
-            android:layout_width="75dp"
-            android:layout_height="50dp"
-            android:layout_alignParentRight="true"
-            android:layout_margin="3dp"
-            android:background="@color/octaveOffGreen"
-            android:gravity="center"
-            android:text="CLEAR"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="#000000"
-            android:visibility="invisible" />
-
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/innerMenu"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/searchBar"
-            android:layout_marginTop="5dp">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/playerMenuList"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_margin="5dp"
-                android:layout_weight="0.7" />
-
-            <ImageView
-                android:id="@+id/playerMenuArt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:layout_weight="0.3" />
-
-        </LinearLayout>
-
-    </RelativeLayout>
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

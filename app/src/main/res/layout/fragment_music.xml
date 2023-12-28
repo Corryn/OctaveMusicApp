@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/playerMenu"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
+    <!-- TODO Remove background once this layout is used for a separate fragment. -->
 
     <TextView
         android:id="@+id/artistLabel"
@@ -19,10 +21,10 @@
     <EditText
         android:id="@+id/searchBar"
         android:layout_width="0dp"
-        android:importantForAutofill="no"
-        android:inputType="text"
         android:layout_height="wrap_content"
         android:hint="@string/music_menu_search_hint"
+        android:importantForAutofill="no"
+        android:inputType="text"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
         app:layout_constraintEnd_toStartOf="@id/clearSearch"
@@ -49,7 +51,7 @@
         android:id="@+id/playerMenuList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="5dp"
+        android:layout_marginTop="3dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchBar" />
 

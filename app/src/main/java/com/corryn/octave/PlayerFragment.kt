@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -17,7 +16,6 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.widget.Toast
@@ -76,7 +74,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         setUpMenuInteractions()
         setUpTouchInteractions()
 
-        setSongListLayout(this.resources.configuration.orientation)
+        setMainArtBackgroundResource(this.resources.configuration)
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
@@ -122,16 +120,16 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             getAlbumArt(vM.selectedSong, context)
 
             if (selected != -1) {
-                binding.playerMenuList.scrollToPosition(vM.selected)
+                binding.playerMenu.playerMenuList.scrollToPosition(vM.selected)
             }
         }
     }
 
     private fun isMenuOpen(): Boolean {
-        return binding.playerMenu.isVisible
+        return binding.playerMenu.root.isVisible
     }
 
-    private fun setUpMenuInteractions() = with(binding) {
+    private fun setUpMenuInteractions() = with(binding.playerMenu) {
         playerMenuList.apply {
             layoutManager = LinearLayoutManager(context)
             addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL).apply {
@@ -172,11 +170,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
                 searchBar.text?.clear()
             }
         }
-
-        downarrow.setOnClickListener { openMenu() }
     }
 
     private fun setUpControlButtons() = with(binding) {
+        downarrow.setOnClickListener { openMenu() }
+
         pause.setOnClickListener {
             if (vM.getNowPlaying() != null) {
                 pause()
@@ -260,7 +258,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
-            binding.playerMenuList.apply {
+            binding.playerMenu.playerMenuList.apply {
                 adapter = songAdapter.also {
                     it.submitList(vM.filterSongs(searchString))
                 }
@@ -274,28 +272,13 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         super.onConfigurationChanged(newConfig)
 
         // Checks the orientation of the screen
-        setSongListLayout(newConfig.orientation)
+        setMainArtBackgroundResource(newConfig)
     }
 
-    private fun setSongListLayout(config: Int) = with(binding) {
-        when (config) {
-            Configuration.ORIENTATION_LANDSCAPE -> {
-                playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.7f)
-
-                val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
-                val resources = requireContext().resources
-                val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
-
-                params.setMargins(px, px, px, px)
-                playerMenuArt.layoutParams = params
-                mainart.setImageResource(R.drawable.octavesplashlandscape)
-            }
-
-            Configuration.ORIENTATION_PORTRAIT -> {
-                playerMenuList.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-                playerMenuArt.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0f)
-                mainart.setImageResource(R.drawable.octavesplashportrait)
-            }
+    private fun setMainArtBackgroundResource(config: Configuration) = with(binding) {
+        when (config.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> mainart.setImageResource(R.drawable.octavesplashlandscape)
+            Configuration.ORIENTATION_PORTRAIT -> mainart.setImageResource(R.drawable.octavesplashportrait)
         }
     }
 
@@ -358,10 +341,10 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
 
     private fun openMenu() {
         if (isMenuOpen().not()) {
-            binding.playerMenu.isVisible = true
+            binding.playerMenu.root.isVisible = true
 
             val animationSlideIn = AnimationUtils.loadAnimation(context, R.anim.slideinmenu)
-            binding.playerMenu.startAnimation(animationSlideIn)
+            binding.playerMenu.root.startAnimation(animationSlideIn)
         }
     }
 
@@ -369,14 +352,14 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
         if (isMenuOpen()) {
             val animationSlideOut = AnimationUtils.loadAnimation(context, R.anim.slideoutmenu)
 
-            binding.playerMenu.apply {
+            binding.playerMenu.root.apply {
                 startAnimation(animationSlideOut)
                 isVisible = false
             }
         }
     }
 
-    private fun returnToArtistList() = with(binding) {
+    private fun returnToArtistList() = with(binding.playerMenu) {
         searchBar.text?.clear()
         vM.isSearching = false
 
@@ -442,25 +425,27 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>(), OnEditorActionList
     }
 
     private fun setAlbumArt(bitmap: Bitmap?) {
-        binding.playerMenuArt.setImageBitmap(bitmap)
+        binding.playerMenu.playerMenuArt?.setImageBitmap(bitmap)
     }
 
     private fun onArtistClicked(artist: String) {
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
-        binding.playerMenuList.startAnimation(animation)
+        binding.playerMenu.playerMenuList.startAnimation(animation)
 
         val artistSongs: List<Song> = vM.byArtistList[artist] ?: return
 
-        binding.playerMenuList.adapter = songAdapter.also {
+        binding.playerMenu.playerMenuList.adapter = songAdapter.also {
             it.submitList(artistSongs)
         }
 
         vM.viewedList = artistSongs
 
-        binding.artistLabel.visibility = View.INVISIBLE
-        binding.searchBar.visibility = View.VISIBLE
-        binding.clearSearch.visibility = View.VISIBLE
+        with(binding.playerMenu) {
+            artistLabel.visibility = View.INVISIBLE
+            searchBar.visibility = View.VISIBLE
+            clearSearch.visibility = View.VISIBLE
+        }
 
         viewingSongs = true
     }

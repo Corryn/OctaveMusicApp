@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/playerMenu"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
+    <!-- TODO Remove background once this layout is used for a separate fragment. -->
 
     <TextView
         android:id="@+id/artistLabel"
@@ -49,7 +51,7 @@
         android:id="@+id/playerMenuList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="5dp"
+        android:layout_marginTop="3dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/playerVerticalGuideline"
         app:layout_constraintTop_toBottomOf="@id/searchBar" />
