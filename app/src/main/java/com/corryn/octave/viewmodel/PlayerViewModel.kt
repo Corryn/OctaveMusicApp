@@ -8,10 +8,10 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.corryn.octave.ui.factory.AlbumBitmapFactory
 import com.corryn.octave.R
 import com.corryn.octave.model.Song
 import com.corryn.octave.model.SongUiDto
+import com.corryn.octave.ui.factory.AlbumBitmapFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -41,7 +41,6 @@ class PlayerViewModel: ViewModel() {
     private var repeat = false
     private var shuffle = false
 
-    var playClicked = false
     var isSearching = false
 
     // Emitting a value of null indicates there was an error trying to play the song.

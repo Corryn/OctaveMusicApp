@@ -103,7 +103,7 @@
             android:id="@+id/pause"
             android:layout_width="40dp"
             android:layout_height="match_parent"
-            android:src="@drawable/octaveplay"
+            android:src="@drawable/playpause"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -125,12 +125,10 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <include
-        android:id="@+id/playerMenu"
-        layout="@layout/fragment_music"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/music_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/controls"
         app:layout_constraintTop_toTopOf="parent" />
 
