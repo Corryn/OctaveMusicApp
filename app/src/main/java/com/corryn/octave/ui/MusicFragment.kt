@@ -46,11 +46,7 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         super.onViewCreated(view, savedInstanceState)
 
         initializeBackPressListener {
-            if (viewingSongs) {
-                returnToArtistList()
-            } else {
-                parentFragmentManager.popBackStack()
-            }
+            handleBackPress()
         }
 
         setUpMenuInteractions()
@@ -63,6 +59,14 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
                     }
                 }
             }
+        }
+    }
+
+    private fun handleBackPress() {
+        if (viewingSongs) {
+            returnToArtistList()
+        } else {
+            parentFragmentManager.popBackStack()
         }
     }
 
