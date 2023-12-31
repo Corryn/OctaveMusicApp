@@ -15,13 +15,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentSplashBinding
 import com.corryn.octave.model.Song
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 
-// TODO Splash screen instead?
 class SplashFragment : BaseFragment<FragmentSplashBinding>() {
 
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentSplashBinding
@@ -145,7 +143,7 @@ class SplashFragment : BaseFragment<FragmentSplashBinding>() {
         }
 
     private fun onClickOctave() {
-        findNavController().navigate(SplashFragmentDirections.actionTitleFragmentToPlayerFragment())
+        //findNavController().navigate(SplashFragmentDirections.actionTitleFragmentToPlayerFragment())
     }
 
     companion object {

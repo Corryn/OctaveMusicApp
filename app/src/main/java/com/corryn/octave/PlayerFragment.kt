@@ -10,20 +10,19 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.commit
-import androidx.fragment.app.replace
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentPlayerBinding
 import com.corryn.octave.model.SongUiDto
-import com.corryn.octave.ui.MusicFragment
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+// TODO Convert this to be the start destination of a nav graph; controls go in the OctaveActivity so they're always accessible
 // TODO Landscape version of music menu not working out of box, maybe because it isn't its own fragment?
 // TODO Load music metadata on request per artist, album, etc.
 // TODO Error dialog instead of error toast?
@@ -46,7 +45,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         binding.playerNowPlaying.isSelected = true
         binding.playlistUpNext.isSelected = true
 
-        setUpControlButtons()
+        binding.downarrow.setOnClickListener { openMenu() }
         setUpTouchInteractions()
 
         setMainArtBackgroundResource(this.resources.configuration)
@@ -90,59 +89,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         }
     }
 
-    private fun setUpControlButtons() = with(binding) {
-        downarrow.setOnClickListener { openMenu() }
-
-        pause.setOnClickListener {
-            if (vM.getNowPlaying() != null) {
-                pause()
-            } else if (!vM.playlistIsEmpty()) {
-                vM.nextSong(context)
-                pause.setImageResource(R.drawable.octavepause)
-            } else {
-                noSongPicked()
-            }
-        }
-
-        next.setOnClickListener {
-            if (vM.getNowPlaying() != null) {
-                nextSongClick()
-            } else {
-                noSongPicked()
-            }
-        }
-
-        previous.setOnClickListener {
-            if (vM.getNowPlaying() != null) {
-                prevSongClick()
-            } else {
-                noSongPicked()
-            }
-        }
-
-        repeat.setOnClickListener {
-            val res = vM.toggleRepeat()
-            if (res) {
-                Toast.makeText(context, getString(R.string.repeat_on), Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeatactive)
-            } else {
-                Toast.makeText(context, getString(R.string.repeat_off), Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeat)
-            }
-        }
-
-        shuffle.setOnClickListener {
-            val res = vM.toggleShuffle()
-            if (res) {
-                Toast.makeText(context, getString(R.string.shuffle_on), Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffleactive)
-            } else {
-                Toast.makeText(context, getString(R.string.shuffle_off), Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffle)
-            }
-        }
-    }
-
     private fun setUpTouchInteractions() = with(binding) {
         playerTitleBar.setOnTouchListener(swipeListener)
         mainart.setOnTouchListener(swipeListener)
@@ -151,10 +97,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     private val swipeListener = View.OnTouchListener { view, event ->
         handleTouchEvent(event)
         true
-    }
-
-    private fun noSongPicked() {
-        Toast.makeText(context, getString(R.string.no_song_active_message), Toast.LENGTH_SHORT).show()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -191,13 +133,13 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                         // Do nothing
                     }
 
-                    abs(deltaX) > MIN_DISTANCE && x1 < x2 -> prevSongClick() // Swipe right
-                    abs(deltaX) > MIN_DISTANCE && x1 > x2 -> nextSongClick() // Swipe left
+                    abs(deltaX) > MIN_DISTANCE && x1 < x2 -> vM.prevSong(requireContext()) // Swipe right
+                    abs(deltaX) > MIN_DISTANCE && x1 > x2 -> vM.nextSong(requireContext()) // Swipe left
                     else -> { // Neutral tap
                         if (!vM.playlistIsEmpty()) {
-                            nextSongClick()
+                            vM.nextSong(requireContext())
                         } else if (vM.getNowPlaying() != null) {
-                            pause()
+                            vM.pauseSong()
                         }
                     }
                 }
@@ -207,46 +149,11 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         return true
     }
 
-    private fun pause() {
-        if (vM.isPaused) {
-            vM.unpauseSong()
-            binding.pause.isActivated = true
-        } else {
-            vM.pauseSong()
-            binding.pause.isActivated = false
-        }
-    }
-
     private fun openMenu() {
-        childFragmentManager.commit {
-            setCustomAnimations(R.anim.slideinmenu, 0, 0, R.anim.slideoutmenu)
-            addToBackStack(null)
-            setReorderingAllowed(true)
-            replace<MusicFragment>(binding.musicFragmentContainer.id)
-        }
+        findNavController().navigate(PlayerFragmentDirections.actionPlayerFragmentToMusicFragment())
     }
 
-    private fun nextSongClick() {
-        if (vM.getNowPlaying() != null) {
-            vM.nextSong(context)
-            binding.pause.isActivated = true
-        }
-    }
-
-    private fun prevSongClick() {
-        if (vM.getNowPlaying() != null) {
-            if (vM.playlistIsEmpty()) {
-                vM.prevSong(context)
-                binding.pause.setImageResource(R.drawable.octavepause)
-            } else {
-                Toast.makeText(context, getString(R.string.next_prev_queue_message), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    // Sets the play/pause button as well. TODO Could separate that out?
     private fun setNowPlaying(song: SongUiDto?) {
-        binding.pause.isActivated = song != null
         binding.playerNowPlaying.text = if (song != null) {
             getString(R.string.now_playing, song.title, song.artist)
         } else {

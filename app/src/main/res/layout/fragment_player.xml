@@ -51,14 +51,13 @@
         android:layout_height="0dp"
         android:scaleType="fitXY"
         android:src="@drawable/octavesplashlandscape"
-        app:layout_constraintBottom_toTopOf="@id/controls"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/player_title_bar" />
 
     <TextView
         android:id="@+id/playlistUpNext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/controls"
         android:layout_centerHorizontal="true"
         android:ellipsize="marquee"
         android:focusable="true"
@@ -72,64 +71,6 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/black"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/controls" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/controls"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/octaveGray"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-            android:id="@+id/shuffle"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="30dp"
-            android:src="@drawable/octaveshuffle"
-            app:layout_constraintEnd_toStartOf="@id/previous" />
-
-        <ImageView
-            android:id="@+id/previous"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="30dp"
-            android:src="@drawable/octaveprevious"
-            app:layout_constraintEnd_toStartOf="@id/pause" />
-
-        <ImageView
-            android:id="@+id/pause"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/playpause"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <ImageView
-            android:id="@+id/next"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="30dp"
-            android:src="@drawable/octavenext"
-            app:layout_constraintStart_toEndOf="@id/pause" />
-
-        <ImageView
-            android:id="@+id/repeat"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="30dp"
-            android:src="@drawable/octaverepeat"
-            app:layout_constraintStart_toEndOf="@id/next" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/music_fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/controls"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

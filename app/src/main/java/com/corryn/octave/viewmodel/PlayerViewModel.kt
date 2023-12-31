@@ -13,14 +13,17 @@ import com.corryn.octave.model.Song
 import com.corryn.octave.model.SongUiDto
 import com.corryn.octave.ui.factory.AlbumBitmapFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.LinkedList
 import java.util.Random
 
-class PlayerViewModel: ViewModel() {
+class PlayerViewModel : ViewModel() {
 
     val player = MediaPlayer()
 
@@ -42,6 +45,9 @@ class PlayerViewModel: ViewModel() {
     private var shuffle = false
 
     var isSearching = false
+
+    private val _playingState: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    val playingState: StateFlow<Boolean> = _playingState.asStateFlow()
 
     // Emitting a value of null indicates there was an error trying to play the song.
     private val _nowPlayingBar: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
@@ -75,8 +81,21 @@ class PlayerViewModel: ViewModel() {
         }
 
         viewModelScope.launch {
+            _playingState.emit(isPaused.not())
             _nowPlayingBar.emit(currentSongInfo)
             _upNext.emit(nextSongInfo)
+        }
+    }
+
+    fun pause() {
+        if (isPaused) {
+            player.start()
+        } else {
+            player.pause()
+        }
+
+        viewModelScope.launch {
+            _playingState.emit(isPaused)
         }
     }
 
@@ -97,27 +116,22 @@ class PlayerViewModel: ViewModel() {
         } else null
 
     fun nextSong(context: Context?) {
-        if (!playlist.isEmpty()) {
-            setSong(removeFromPlaylist(), context)
-        } else if (shuffle) {
-            shuffle(context)
-        } else if (nowPlayingIndex + 1 < activeList!!.size) {
-            setSong(++nowPlayingIndex, context)
-        } else {
-            nowPlayingIndex = 0
-            setSong(nowPlayingIndex, context)
+        when {
+            playlist.isEmpty().not() -> setSong(removeFromPlaylist(), context)
+            shuffle -> shuffle(context)
+            nowPlayingIndex + 1 < activeList!!.size -> setSong(++nowPlayingIndex, context)
+            else -> {
+                nowPlayingIndex = 0
+                setSong(nowPlayingIndex, context)
+            }
         }
     }
 
     fun prevSong(context: Context?) {
         if (playlist.isEmpty()) {
             when {
-                shuffle -> {
-                    shuffle(context)
-                }
-                nowPlayingIndex - 1 >= 0 -> {
-                    setSong(--nowPlayingIndex, context)
-                }
+                shuffle -> shuffle(context)
+                nowPlayingIndex - 1 >= 0 -> setSong(--nowPlayingIndex, context)
                 else -> {
                     nowPlayingIndex = activeList!!.size - 1
                     setSong(nowPlayingIndex, context)
@@ -181,7 +195,8 @@ class PlayerViewModel: ViewModel() {
             player.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build())
+                    .build()
+            )
             player.setDataSource(context ?: throw IOException(), uri)
             player.prepare()
             player.start()
@@ -198,12 +213,14 @@ class PlayerViewModel: ViewModel() {
             }
 
             viewModelScope.launch {
+                _playingState.emit(isPaused.not())
                 _nowPlayingBar.emit(currentSongInfo)
                 _nowPlayingMessage.emit(currentSongInfo)
                 _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
+                _playingState.emit(false)
                 _nowPlayingBar.emit(null)
                 _upNext.emit(null)
                 _errorMessage.emit(R.string.file_not_found_error)
@@ -222,7 +239,8 @@ class PlayerViewModel: ViewModel() {
             player.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build())
+                    .build()
+            )
             player.setDataSource(context ?: throw IOException(), uri ?: throw IOException())
             player.prepare()
             player.start()
@@ -238,12 +256,14 @@ class PlayerViewModel: ViewModel() {
             }
 
             viewModelScope.launch {
+                _playingState.emit(isPaused.not())
                 _nowPlayingBar.emit(currentSongInfo)
                 _nowPlayingMessage.emit(currentSongInfo)
                 _upNext.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
+                _playingState.emit(false)
                 _nowPlayingBar.emit(null)
                 _upNext.emit(null)
                 _errorMessage.emit(R.string.file_not_found_error)
