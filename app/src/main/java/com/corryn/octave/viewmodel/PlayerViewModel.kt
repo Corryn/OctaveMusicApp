@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.corryn.octave.R
 import com.corryn.octave.model.Song
 import com.corryn.octave.model.SongUiDto
+import com.corryn.octave.repository.MusicRepository
 import com.corryn.octave.ui.factory.AlbumBitmapFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +28,12 @@ class PlayerViewModel : ViewModel() {
 
     val player = MediaPlayer()
 
+    private val repository = MusicRepository()
     private val factory = AlbumBitmapFactory()
 
-    val songList = mutableListOf<Song>()
-    val artistList = mutableListOf<String>()
-    val byArtistList = HashMap<String, MutableList<Song>>()
+    private var songList: List<Song> = emptyList()
+    var artistList: List<String> = emptyList()
+    var byArtistList = HashMap<String, MutableList<Song>>()
     var activeList: List<Song?>? = null
     var viewedList: List<Song>? = null
 
@@ -67,6 +69,11 @@ class PlayerViewModel : ViewModel() {
     val errorMessage: SharedFlow<Int> = _errorMessage.asSharedFlow()
 
     fun preparePlayer(context: Context?) {
+        byArtistList = repository.createArtistSongHashMap(context).also {
+            artistList = it.keys.toList()
+            songList = it.values.flatten()
+        }
+
         player.setOnCompletionListener {
             nextSong(context)
         }
@@ -95,7 +102,7 @@ class PlayerViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            _playingState.emit(isPaused)
+            _playingState.emit(isPaused.not())
         }
     }
 

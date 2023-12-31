@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-// TODO Convert this to be the start destination of a nav graph; controls go in the OctaveActivity so they're always accessible
+// TODO Update the now playing bar when navigating back to this screen; maybe make the current song a stateflow?
 // TODO Landscape version of music menu not working out of box, maybe because it isn't its own fragment?
 // TODO Load music metadata on request per artist, album, etc.
 // TODO Error dialog instead of error toast?
@@ -59,12 +59,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                 }
 
                 launch {
-                    vM.nowPlayingMessage.collectLatest {
-                        showNowPlayingToast(it)
-                    }
-                }
-
-                launch {
                     vM.upNext.collectLatest {
                         setUpNext(it)
                     }
@@ -76,16 +70,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                     }
                 }
             }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        with(vM) {
-            preparePlayer(context)
-            updateNowPlayingAndUpNext()
-            getAlbumArt(vM.selectedSong, context)
         }
     }
 
@@ -158,18 +142,6 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
             getString(R.string.now_playing, song.title, song.artist)
         } else {
             getString(R.string.now_playing_default)
-        }
-    }
-
-    private fun showNowPlayingToast(song: SongUiDto?) {
-        val toastMessage = if (song != null) {
-            getString(R.string.now_playing, song.title, song.artist)
-        } else {
-            null
-        }
-
-        toastMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
 
