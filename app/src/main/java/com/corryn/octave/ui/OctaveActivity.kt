@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 
 // TODO Convert noSongPicked to be a VM flow emit?
 // TODO Permission request warning dialog if denied
+// TODO Figure out how to set current song as active media (for car, etc.)
+// TODO Notification media controls?
 class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
 
     override val viewBindingInflater: (LayoutInflater) -> ActivityOctaveBinding
