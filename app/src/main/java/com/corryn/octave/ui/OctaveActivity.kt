@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 // TODO Convert noSongPicked to be a VM flow emit?
 // TODO Figure out how to set current song as active media (for car, etc.)
 // TODO Notification media controls?
-class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
+class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRationaleDialog.RationaleDialogListener {
 
     override val viewBindingInflater: (LayoutInflater) -> ActivityOctaveBinding
         get() = ActivityOctaveBinding::inflate
@@ -81,7 +81,7 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
     }
 
     // Returns a boolean indicating whether permission had to be requested.
-    private fun askForExternalStoragePermission(): Boolean {
+    private fun askForExternalStoragePermission(skipRationale: Boolean = false): Boolean {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
@@ -89,7 +89,7 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
         }
 
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(permission)) {
+            if (skipRationale.not() && shouldShowRequestPermissionRationale(permission)) {
                 currentDialog?.dismiss()
                 currentDialog = StoragePermissionRationaleDialog().also {
                     it.show(supportFragmentManager, StoragePermissionRationaleDialog.fragmentTag)
@@ -113,6 +113,10 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
                 it.show(supportFragmentManager, StoragePermissionDeniedDialog.fragmentTag)
             }
         }
+    }
+
+    override fun onRationalePositive() {
+        askForExternalStoragePermission(skipRationale = true)
     }
 
     private fun setUpControlButtons() = with(binding.controls) {
