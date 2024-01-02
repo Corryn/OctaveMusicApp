@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -16,12 +17,13 @@ import com.corryn.octave.R
 import com.corryn.octave.databinding.ActivityOctaveBinding
 import com.corryn.octave.model.SongUiDto
 import com.corryn.octave.ui.base.BaseActivity
+import com.corryn.octave.ui.dialog.StoragePermissionDeniedDialog
+import com.corryn.octave.ui.dialog.StoragePermissionRationaleDialog
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // TODO Convert noSongPicked to be a VM flow emit?
-// TODO Permission request warning dialog if denied
 // TODO Figure out how to set current song as active media (for car, etc.)
 // TODO Notification media controls?
 class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
@@ -32,6 +34,8 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
     private val vM: PlayerViewModel by viewModels()
 
     private val storagePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission(), ::onStoragePermissionRequestResult)
+
+    private var currentDialog: DialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -70,6 +74,12 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        currentDialog?.dismiss()
+    }
+
     // Returns a boolean indicating whether permission had to be requested.
     private fun askForExternalStoragePermission(): Boolean {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -79,7 +89,15 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
         }
 
         if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-            storagePermissionLauncher.launch(permission)
+            if (shouldShowRequestPermissionRationale(permission)) {
+                currentDialog?.dismiss()
+                currentDialog = StoragePermissionRationaleDialog().also {
+                    it.show(supportFragmentManager, StoragePermissionRationaleDialog.fragmentTag)
+                }
+            } else {
+                storagePermissionLauncher.launch(permission)
+            }
+
             return true
         }
 
@@ -90,7 +108,10 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>() {
         if (isGranted) {
             onResume()
         } else {
-            // TODO Warning dialog?
+            currentDialog?.dismiss()
+            currentDialog = StoragePermissionDeniedDialog().also {
+                it.show(supportFragmentManager, StoragePermissionDeniedDialog.fragmentTag)
+            }
         }
     }
 

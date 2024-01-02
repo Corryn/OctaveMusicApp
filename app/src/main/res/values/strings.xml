@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">Octave</string>
 
+    <string name="storage_permission_rationale_dialog_title">Permission Required</string>
+    <string name="storage_permission_rationale_dialog_message">Please allow Octave to access your media files. The app cannot play music without this permission.</string>
+    <string name="storage_permission_rationale_dialog_positive">OK</string>
+
+    <string name="storage_permission_denied_dialog_title">Permission Denied</string>
+    <string name="storage_permission_denied_dialog_message">Octave does not have access to your media files and cannot play music. To fix this, add the permission using the Settings app.</string>
+    <string name="storage_permission_denied_dialog_positive">OK</string>
+
     <string name="repeat_on">Repeat on</string>
     <string name="repeat_off">Repeat off</string>
     <string name="shuffle_on">Shuffle on</string>
