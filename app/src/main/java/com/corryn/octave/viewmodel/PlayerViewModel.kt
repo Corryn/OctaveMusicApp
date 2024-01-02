@@ -70,7 +70,7 @@ class PlayerViewModel : ViewModel() {
 
     fun preparePlayer(context: Context?) {
         byArtistList = repository.createArtistSongHashMap(context).also {
-            artistList = it.keys.toList()
+            artistList = it.keys.toList().sorted()
             songList = it.values.flatten()
         }
 
