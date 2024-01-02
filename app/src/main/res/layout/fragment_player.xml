@@ -58,7 +58,6 @@
         android:id="@+id/playlistUpNext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:ellipsize="marquee"
         android:focusable="true"
         android:focusableInTouchMode="true"

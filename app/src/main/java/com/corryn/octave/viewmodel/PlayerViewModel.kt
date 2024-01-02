@@ -24,6 +24,7 @@ import java.io.IOException
 import java.util.LinkedList
 import java.util.Random
 
+// TODO Separate error flow for error messages
 class PlayerViewModel : ViewModel() {
 
     val player = MediaPlayer()
@@ -51,15 +52,14 @@ class PlayerViewModel : ViewModel() {
     private val _playingState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val playingState: StateFlow<Boolean> = _playingState.asStateFlow()
 
-    // Emitting a value of null indicates there was an error trying to play the song.
-    private val _nowPlayingBar: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
-    val nowPlayingBar: SharedFlow<SongUiDto?> = _nowPlayingBar.asSharedFlow()
+    private val _currentSong: MutableStateFlow<SongUiDto?> = MutableStateFlow(null)
+    val currentSong: StateFlow<SongUiDto?> = _currentSong.asStateFlow()
+
+    private val _nextSong: MutableStateFlow<SongUiDto?> = MutableStateFlow(null)
+    val nextSong: StateFlow<SongUiDto?> = _nextSong.asStateFlow()
 
     private val _nowPlayingMessage: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
     val nowPlayingMessage: SharedFlow<SongUiDto?> = _nowPlayingMessage.asSharedFlow()
-
-    private val _upNext: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
-    val upNext: SharedFlow<SongUiDto?> = _upNext.asSharedFlow()
 
     private val _albumArt: MutableSharedFlow<Bitmap?> = MutableSharedFlow()
     val albumArt: SharedFlow<Bitmap?> = _albumArt.asSharedFlow()
@@ -89,8 +89,8 @@ class PlayerViewModel : ViewModel() {
 
         viewModelScope.launch {
             _playingState.emit(isPaused.not())
-            _nowPlayingBar.emit(currentSongInfo)
-            _upNext.emit(nextSongInfo)
+            _currentSong.emit(currentSongInfo)
+            _nextSong.emit(nextSongInfo)
         }
     }
 
@@ -221,15 +221,15 @@ class PlayerViewModel : ViewModel() {
 
             viewModelScope.launch {
                 _playingState.emit(isPaused.not())
-                _nowPlayingBar.emit(currentSongInfo)
+                _currentSong.emit(currentSongInfo)
                 _nowPlayingMessage.emit(currentSongInfo)
-                _upNext.emit(nextSongInfo)
+                _nextSong.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
                 _playingState.emit(false)
-                _nowPlayingBar.emit(null)
-                _upNext.emit(null)
+                _currentSong.emit(null)
+                _nextSong.emit(null)
                 _errorMessage.emit(R.string.file_not_found_error)
             }
         }
@@ -264,15 +264,15 @@ class PlayerViewModel : ViewModel() {
 
             viewModelScope.launch {
                 _playingState.emit(isPaused.not())
-                _nowPlayingBar.emit(currentSongInfo)
+                _currentSong.emit(currentSongInfo)
                 _nowPlayingMessage.emit(currentSongInfo)
-                _upNext.emit(nextSongInfo)
+                _nextSong.emit(nextSongInfo)
             }
         } catch (e: IOException) {
             viewModelScope.launch {
                 _playingState.emit(false)
-                _nowPlayingBar.emit(null)
-                _upNext.emit(null)
+                _currentSong.emit(null)
+                _nextSong.emit(null)
                 _errorMessage.emit(R.string.file_not_found_error)
             }
         }

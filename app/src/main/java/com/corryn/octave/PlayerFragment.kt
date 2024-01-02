@@ -53,13 +53,13 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 launch {
-                    vM.nowPlayingBar.collectLatest {
+                    vM.currentSong.collectLatest {
                         setNowPlaying(it)
                     }
                 }
 
                 launch {
-                    vM.upNext.collectLatest {
+                    vM.nextSong.collectLatest {
                         setUpNext(it)
                     }
                 }
