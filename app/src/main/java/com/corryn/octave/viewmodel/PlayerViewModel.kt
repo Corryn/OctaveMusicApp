@@ -85,9 +85,7 @@ class PlayerViewModel : ViewModel() {
     // Therefore, we can't just rely on it being updated by the setSong method.
     fun updateNowPlayingAndUpNext() {
         val currentSongInfo = _currentSong.value
-        val nextSongInfo = playlist.peek()?.let {
-            SongUiDto(it.title, it.artist)
-        }
+        val nextSongInfo = getNextSongInfo()
 
         viewModelScope.launch {
             _playingState.emit(isPaused.not())
@@ -147,9 +145,7 @@ class PlayerViewModel : ViewModel() {
     fun addToPlaylist(s: Song) {
         playlist.add(s)
 
-        val nextSongInfo = playlist.peek()?.let {
-            SongUiDto(it.title, it.artist)
-        }
+        val nextSongInfo = getNextSongInfo()
 
         viewModelScope.launch {
             _nextSong.emit(nextSongInfo)
@@ -201,9 +197,7 @@ class PlayerViewModel : ViewModel() {
             nowPlayingIndex = songIndex
 
             val currentSongInfo = SongUiDto(song.title, song.artist)
-            val nextSongInfo = playlist.peek()?.let {
-                SongUiDto(it.title, it.artist)
-            }
+            val nextSongInfo = getNextSongInfo()
 
             viewModelScope.launch {
                 _playingState.emit(isPaused.not())
@@ -246,9 +240,7 @@ class PlayerViewModel : ViewModel() {
             nowPlayingIndex = activeList!!.indexOf(s)
 
             val currentSongInfo = SongUiDto(s.title, s.artist)
-            val nextSongInfo = playlist.peek()?.let {
-                SongUiDto(it.title, it.artist)
-            }
+            val nextSongInfo = getNextSongInfo()
 
             viewModelScope.launch {
                 _playingState.emit(isPaused.not())
@@ -272,6 +264,12 @@ class PlayerViewModel : ViewModel() {
 
     fun getNowPlaying(): SongUiDto? {
         return _currentSong.value
+    }
+
+    fun getNextSongInfo(): SongUiDto? {
+        return playlist.peek()?.let {
+            SongUiDto(it.title, it.artist)
+        }
     }
 
     fun getSongIndex(s: Song): Int {
