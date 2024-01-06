@@ -4,11 +4,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.corryn.octave.R
 import com.corryn.octave.databinding.ListItemSongBinding
 import com.corryn.octave.model.Song
 
@@ -38,11 +36,7 @@ class SongAdapter(
     ): RecyclerView.ViewHolder(binding.root) {
 
         fun bind(song: Song, activeList: List<Song>) = with(binding) {
-            if (adapterPosition % 2 == 1) {
-                root.background = ContextCompat.getDrawable(root.context, R.drawable.whiteborder)
-            } else {
-                root.background = ContextCompat.getDrawable(root.context, R.drawable.tealborder)
-            }
+            root.isActivated = adapterPosition % 2 == 1
 
             songTitle.text = song.title
             songArtist.text = song.artist

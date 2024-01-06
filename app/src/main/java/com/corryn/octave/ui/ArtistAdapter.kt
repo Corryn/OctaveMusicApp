@@ -2,11 +2,9 @@ package com.corryn.octave.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.corryn.octave.R
 import com.corryn.octave.databinding.ListItemArtistBinding
 
 class ArtistAdapter(private val onArtistClicked: (String) -> Unit): ListAdapter<String, ArtistAdapter.ArtistViewHolder>(ArtistDiffer()) {
@@ -26,11 +24,7 @@ class ArtistAdapter(private val onArtistClicked: (String) -> Unit): ListAdapter<
     inner class ArtistViewHolder(private val binding: ListItemArtistBinding, private val onArtistClicked: (String) -> Unit): ViewHolder(binding.root) {
 
         fun bind(artist: String) = with(binding) {
-            if (adapterPosition % 2 == 1) {
-                root.background = ContextCompat.getDrawable(root.context, R.drawable.whiteborder)
-            } else {
-                root.background = ContextCompat.getDrawable(root.context, R.drawable.tealborder)
-            }
+            root.isActivated = adapterPosition % 2 == 1
 
             artistName.text = artist
 
