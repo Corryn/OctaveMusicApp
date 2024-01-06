@@ -41,11 +41,13 @@ class PlayerViewModel : ViewModel() {
     private val playlist = LinkedList<Song>()
 
     private var nowPlayingIndex = -1
-    private var songNowPlaying: Song? = null
     var selected = -1
 
     private var repeat = false
     private var shuffle = false
+
+    private val isPaused: Boolean
+        get() = !player.isPlaying
 
     var isSearching = false
 
@@ -79,11 +81,11 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
+    // The current song is always set by playing it, but the next song can be set without playing it immediately.
+    // Therefore, we can't just rely on it being updated by the setSong method.
     fun updateNowPlayingAndUpNext() {
-        val currentSongInfo = songNowPlaying?.let {
-            SongUiDto(it.title, it.artist)
-        }
-        val nextSongInfo = playlistNext()?.let {
+        val currentSongInfo = _currentSong.value
+        val nextSongInfo = playlist.peek()?.let {
             SongUiDto(it.title, it.artist)
         }
 
@@ -106,25 +108,16 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    fun pauseSong() {
-        player.pause()
-    }
-
-    fun unpauseSong() {
-        player.start()
-    }
-
-    val isPaused: Boolean
-        get() = !player.isPlaying
-
     val selectedSong: Song?
         get() = if (selected != -1) {
             songList[selected]
         } else null
 
     fun nextSong(context: Context?) {
+        val song = playlist.removeFirstOrNull()
+
         when {
-            playlist.isEmpty().not() -> setSong(removeFromPlaylist(), context)
+            song != null -> setSong(song, context)
             shuffle -> shuffle(context)
             nowPlayingIndex + 1 < activeList!!.size -> setSong(++nowPlayingIndex, context)
             else -> {
@@ -153,24 +146,17 @@ class PlayerViewModel : ViewModel() {
 
     fun addToPlaylist(s: Song) {
         playlist.add(s)
-        updateNowPlayingAndUpNext()
-    }
 
-    fun removeFromPlaylist(): Song? {
-        return if (!playlist.isEmpty()) {
-            playlist.remove()
-        } else {
-            null
+        val nextSongInfo = playlist.peek()?.let {
+            SongUiDto(it.title, it.artist)
+        }
+
+        viewModelScope.launch {
+            _nextSong.emit(nextSongInfo)
         }
     }
 
-    fun playlistNext(): Song? {
-        return if (!playlist.isEmpty()) {
-            playlist.first
-        } else null
-    }
-
-    fun shuffle(context: Context?) {
+    private fun shuffle(context: Context?) {
         val random: Int
         val r = Random()
         random = r.nextInt(activeList!!.size)
@@ -188,34 +174,34 @@ class PlayerViewModel : ViewModel() {
         return shuffle
     }
 
+    // TODO Handle null song selection?
     fun setSong(songIndex: Int, context: Context?) {
-        val uri: Uri?
-        val temp: Song?
-        try {
-            temp = activeList!![songIndex]
-            uri = Uri.parse("file:///" + temp!!.data)
-        } catch (e: Exception) {
-            return
-        }
-        try {
-            player.reset()
-            player.setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            player.setDataSource(context ?: throw IOException(), uri)
-            player.prepare()
-            player.start()
-            if (repeat) {
-                player.isLooping = true
-            }
-            nowPlayingIndex = songIndex
-            songNowPlaying = temp
+        val song = activeList?.getOrNull(songIndex) ?: return
+        val uri = Uri.parse(fileUriPrefix + song.data)
 
-            val song = activeList!![songIndex]!!
+        try {
+            player.apply {
+                reset()
+
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                setDataSource(context ?: throw IOException(), uri)
+
+                prepare()
+                start()
+
+                if (repeat) {
+                    isLooping = true
+                }
+            }
+
+            nowPlayingIndex = songIndex
+
             val currentSongInfo = SongUiDto(song.title, song.artist)
-            val nextSongInfo = playlistNext()?.let {
+            val nextSongInfo = playlist.peek()?.let {
                 SongUiDto(it.title, it.artist)
             }
 
@@ -235,30 +221,32 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    private fun setSong(s: Song?, context: Context?) {
-        val uri: Uri? = try {
-            Uri.parse(fileUriPrefix + s!!.data)
-        } catch (e: Exception) {
-            return
-        }
+    private fun setSong(s: Song, context: Context?) {
+        val uri = Uri.parse(fileUriPrefix + s.data)
+
         try {
-            player.reset()
-            player.setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            player.setDataSource(context ?: throw IOException(), uri ?: throw IOException())
-            player.prepare()
-            player.start()
-            if (repeat) {
-                player.isLooping = true
+            player.apply {
+                reset()
+
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                setDataSource(context ?: throw IOException(), uri)
+
+                prepare()
+                start()
+
+                if (repeat) {
+                    isLooping = true
+                }
             }
+
             nowPlayingIndex = activeList!!.indexOf(s)
-            songNowPlaying = s
 
             val currentSongInfo = SongUiDto(s.title, s.artist)
-            val nextSongInfo = playlistNext()?.let {
+            val nextSongInfo = playlist.peek()?.let {
                 SongUiDto(it.title, it.artist)
             }
 
@@ -282,8 +270,8 @@ class PlayerViewModel : ViewModel() {
         return viewedList!!.filter { it.title.contains(query, ignoreCase = true) }
     }
 
-    fun getNowPlaying(): Song? {
-        return songNowPlaying
+    fun getNowPlaying(): SongUiDto? {
+        return _currentSong.value
     }
 
     fun getSongIndex(s: Song): Int {

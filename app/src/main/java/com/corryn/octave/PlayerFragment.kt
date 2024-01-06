@@ -120,10 +120,9 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
                     abs(deltaX) > MIN_DISTANCE && x1 < x2 -> vM.prevSong(requireContext()) // Swipe right
                     abs(deltaX) > MIN_DISTANCE && x1 > x2 -> vM.nextSong(requireContext()) // Swipe left
                     else -> { // Neutral tap
-                        if (!vM.playlistIsEmpty()) {
-                            vM.nextSong(requireContext())
-                        } else if (vM.getNowPlaying() != null) {
-                            vM.pauseSong()
+                        when {
+                            vM.getNowPlaying() != null -> vM.pause()
+                            vM.playlistIsEmpty().not() -> vM.nextSong(requireContext())
                         }
                     }
                 }
