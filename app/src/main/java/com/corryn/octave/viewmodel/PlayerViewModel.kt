@@ -9,11 +9,13 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corryn.octave.R
-import com.corryn.octave.model.Artist
-import com.corryn.octave.model.Song
-import com.corryn.octave.model.SongUiDto
+import com.corryn.octave.model.data.Artist
+import com.corryn.octave.model.dto.MusicUiDto
+import com.corryn.octave.model.data.Song
+import com.corryn.octave.model.toDto
 import com.corryn.octave.repository.MusicRepository
 import com.corryn.octave.ui.factory.AlbumBitmapFactory
+import com.corryn.octave.ui.factory.MusicUiFactory
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -26,23 +28,21 @@ import java.util.LinkedList
 import java.util.Random
 
 // TODO Separate error flow for error messages
+// TODO Option to limit scope of shuffling?
 class PlayerViewModel : ViewModel() {
 
     private val player = MediaPlayer()
 
     private val repository = MusicRepository()
-    private val factory = AlbumBitmapFactory()
+    private val uiFactory = MusicUiFactory()
+    private val albumArtFactory = AlbumBitmapFactory()
 
-    private var songList: List<Song> = emptyList()
-    var artistList: List<Artist> = emptyList()
-    var byArtistList: Map<Long, List<Song>> = HashMap()
-    var activeList: List<Song?>? = null
-    var viewedList: List<Song>? = null
-
+    private var songList: Map<Long, Song> = HashMap()
+    private var artists: List<Artist> = emptyList()
+    private var artistToSongsMap: Map<Long, List<Song>> = HashMap()
     private val playlist = LinkedList<Song>()
 
-    private var nowPlayingIndex = -1
-    var selected = -1
+    var activeList: List<MusicUiDto>? = null
 
     private val isPaused: Boolean
         get() = !player.isPlaying
@@ -50,21 +50,31 @@ class PlayerViewModel : ViewModel() {
     private var repeat = false
     private var shuffle = false
 
+    // TODO Evaluate need for this boolean
     var isSearching = false
 
     // region Flows
 
+    private val _uiItems: MutableStateFlow<List<MusicUiDto>> = MutableStateFlow(emptyList())
+    val uiItems: StateFlow<List<MusicUiDto>> = _uiItems.asStateFlow()
+
     private val _playingState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val playingState: StateFlow<Boolean> = _playingState.asStateFlow()
 
-    private val _currentSong: MutableStateFlow<SongUiDto?> = MutableStateFlow(null)
-    val currentSong: StateFlow<SongUiDto?> = _currentSong.asStateFlow()
+    private val _selectedSong: MutableStateFlow<MusicUiDto.SongUiDto?> = MutableStateFlow(null)
+    val selectedSong: StateFlow<MusicUiDto.SongUiDto?> = _selectedSong.asStateFlow()
 
-    private val _nextSong: MutableStateFlow<SongUiDto?> = MutableStateFlow(null)
-    val nextSong: StateFlow<SongUiDto?> = _nextSong.asStateFlow()
+    private val _currentSong: MutableStateFlow<MusicUiDto.SongUiDto?> = MutableStateFlow(null)
+    val currentSong: StateFlow<MusicUiDto.SongUiDto?> = _currentSong.asStateFlow()
 
-    private val _nowPlayingMessage: MutableSharedFlow<SongUiDto?> = MutableSharedFlow()
-    val nowPlayingMessage: SharedFlow<SongUiDto?> = _nowPlayingMessage.asSharedFlow()
+    private val _nextSong: MutableStateFlow<MusicUiDto.SongUiDto?> = MutableStateFlow(null)
+    val nextSong: StateFlow<MusicUiDto.SongUiDto?> = _nextSong.asStateFlow()
+
+    private val _nowPlayingMessage: MutableSharedFlow<MusicUiDto.SongUiDto?> = MutableSharedFlow()
+    val nowPlayingMessage: SharedFlow<MusicUiDto.SongUiDto?> = _nowPlayingMessage.asSharedFlow()
+
+    private val _playlistUpdatedMessage: MutableSharedFlow<MusicUiDto.SongUiDto> = MutableSharedFlow()
+    val playlistUpdatedMessage: SharedFlow<MusicUiDto.SongUiDto> = _playlistUpdatedMessage.asSharedFlow()
 
     private val _albumArt: MutableSharedFlow<Bitmap?> = MutableSharedFlow()
     val albumArt: SharedFlow<Bitmap?> = _albumArt.asSharedFlow()
@@ -76,9 +86,9 @@ class PlayerViewModel : ViewModel() {
     val errorMessage: SharedFlow<Int> = _errorMessage.asSharedFlow()
 
     fun preparePlayer(context: Context?) {
-        byArtistList = repository.createArtistSongHashMap(context).also {
-            artistList = makeArtistList(it).sortedBy { artist -> artist.name }
-            songList = it.values.flatten()
+        artistToSongsMap = repository.createArtistSongHashMap(context).also { songMap ->
+            artists = makeArtistList(songMap).sortedBy { it.name }
+            songList = songMap.values.flatten().associateBy { it.id }
         }
 
         player.setOnCompletionListener {
@@ -90,11 +100,38 @@ class PlayerViewModel : ViewModel() {
     private fun makeArtistList(songMap: Map<Long, List<Song>>): List<Artist> {
         val artists = mutableListOf<Artist>()
 
-        for(artist in songMap) {
+        for (artist in songMap) {
             artists.add(Artist(artist.key, artist.value.first().artist))
         }
 
         return artists
+    }
+
+    // Indicates selection, but not necessarily playing, of the song.
+    fun selectSongById(id: Long) {
+        viewModelScope.launch {
+            _selectedSong.emit(songList[id]?.toDto())
+        }
+    }
+
+    fun showArtists() {
+        viewModelScope.launch {
+            uiFactory.createArtistUiDtos(artists).also {
+                activeList = it
+                _uiItems.emit(it)
+            }
+
+        }
+    }
+
+    fun selectArtist(artistId: Long) {
+        viewModelScope.launch {
+            val songs = artistToSongsMap[artistId] ?: return@launch
+            uiFactory.createSongUiDtos(songs).also {
+                activeList = it
+                _uiItems.emit(it)
+            }
+        }
     }
 
     // The current song is always set by playing it, but the next song can be set without playing it immediately.
@@ -122,21 +159,26 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    val selectedSong: Song?
-        get() = if (selected != -1) {
-            songList[selected]
-        } else null
-
+    // TODO If a playlist ends and the active list contains that song, it can find the next one and continue.
+    // TODO Consider ways to improve on this?
     fun nextSong(context: Context?) {
         val song = playlist.removeFirstOrNull()
 
         when {
             song != null -> setSong(context, song)
             shuffle -> shuffle(context)
-            nowPlayingIndex + 1 < activeList!!.size -> setSong(context, ++nowPlayingIndex)
-            else -> {
-                nowPlayingIndex = 0
-                setSong(context, nowPlayingIndex)
+            else -> { // Try to find the current song in the active list and play the next song. If we can't determine the next song, do nothing.
+                val currentSongIndex = activeList?.indexOf(_currentSong.value ?: return) ?: return
+                val nextSong = if (currentSongIndex + 1 == activeList?.size) { // Wrap check
+                    activeList?.getOrNull(0)
+                } else {
+                    activeList?.getOrNull(currentSongIndex + 1)
+                }
+
+                // TODO Could support playing a whole album or artist I guess
+                if (nextSong is MusicUiDto.SongUiDto) {
+                    setSong(context, nextSong.id)
+                }
             }
         }
     }
@@ -145,10 +187,19 @@ class PlayerViewModel : ViewModel() {
         if (playlist.isEmpty()) {
             when {
                 shuffle -> shuffle(context)
-                nowPlayingIndex - 1 >= 0 -> setSong(context, --nowPlayingIndex)
-                else -> {
-                    nowPlayingIndex = activeList!!.size - 1
-                    setSong(context, nowPlayingIndex)
+                else -> { // Try to find the current song in the active list and play the previous song. If we can't determine the previous song, do nothing.
+                    val currentSongIndex = activeList?.indexOf(_currentSong.value ?: return) ?: return
+                    val prevSong = if (currentSongIndex - 1 == -1) { // Wrap check
+                        val lastIndex = activeList?.lastIndex ?: -1
+                        activeList?.getOrNull(lastIndex)
+                    } else {
+                        activeList?.getOrNull(currentSongIndex - 1)
+                    }
+
+                    // TODO Could support playing a whole album or artist I guess
+                    if (prevSong is MusicUiDto.SongUiDto) {
+                        setSong(context, prevSong.id)
+                    }
                 }
             }
         }
@@ -158,21 +209,23 @@ class PlayerViewModel : ViewModel() {
         return playlist.isEmpty()
     }
 
-    fun addToPlaylist(s: Song) {
-        playlist.add(s)
+    fun addToPlaylist(songId: Long) {
+        val song = songList[songId] ?: return
 
+        playlist.add(song)
+
+        val addedSongInfo = song.toDto()
         val nextSongInfo = getNextSongInfo()
 
         viewModelScope.launch {
+            _playlistUpdatedMessage.emit(addedSongInfo)
             _nextSong.emit(nextSongInfo)
         }
     }
 
     private fun shuffle(context: Context?) {
-        val random: Int
-        val r = Random()
-        random = r.nextInt(activeList!!.size)
-        setSong(context, random)
+        val randomIndex = Random().nextInt(songList.size)
+        setSong(context, randomIndex)
     }
 
     fun toggleRepeat(): Boolean {
@@ -187,18 +240,22 @@ class PlayerViewModel : ViewModel() {
     }
 
     // TODO Handle null song selection?
-    fun setSong(context: Context?, songIndex: Int) {
-        val song = activeList?.getOrNull(songIndex) ?: return
-        playSong(context, song, songIndex)
+    fun setSong(context: Context?, songId: Long) {
+        val song = songList[songId] ?: return
+        playSong(context, song)
     }
 
     // TODO Handle null song selection?
-    private fun setSong(context: Context?, song: Song) {
-        val songIndex = activeList?.indexOf(song) ?: return
-        playSong(context, song, songIndex)
+    private fun setSong(context: Context?, songIndex: Int) {
+        val song = songList.toList().getOrNull(songIndex)?.second ?: return
+        playSong(context, song)
     }
 
-    private fun playSong(context: Context?, song: Song, index: Int) {
+    private fun setSong(context: Context?, song: Song) {
+        playSong(context, song)
+    }
+
+    private fun playSong(context: Context?, song: Song) {
         val uri = Uri.parse(fileUriPrefix + song.data)
 
         try {
@@ -220,9 +277,7 @@ class PlayerViewModel : ViewModel() {
                 }
             }
 
-            nowPlayingIndex = index
-
-            val currentSongInfo = SongUiDto(song.id, song.title, song.artist)
+            val currentSongInfo = song.toDto()
             val nextSongInfo = getNextSongInfo()
 
             viewModelScope.launch {
@@ -241,35 +296,33 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    fun filterSongs(query: String): List<Song> {
-        return viewedList!!.filter { it.title.contains(query, ignoreCase = true) }
+    fun filterUi(query: String) {
+        val filteredList = activeList?.filter {
+            when (it) {
+                is MusicUiDto.ArtistUiDto -> it.name.contains(query, ignoreCase = true)
+                is MusicUiDto.SongUiDto -> it.songName.contains(query, ignoreCase = true)
+            }
+        } ?: return
+
+        viewModelScope.launch {
+            _uiItems.emit(filteredList)
+        }
     }
 
-    fun getNowPlaying(): SongUiDto? {
+    fun getNowPlaying(): MusicUiDto.SongUiDto? {
         return _currentSong.value
     }
 
-    private fun getNextSongInfo(): SongUiDto? {
-        return playlist.peek()?.let {
-            SongUiDto(it.id, it.title, it.artist)
-        }
+    private fun getNextSongInfo(): MusicUiDto.SongUiDto? {
+        return playlist.peek()?.toDto()
     }
 
-    fun getSongIndex(s: Song): Int {
-        for (i in activeList!!.indices) {
-            if (s == activeList!![i]) {
-                return i
-            }
-        }
-        return -1
-    }
-
-    fun getAlbumArt(song: Song?, context: Context?) {
+    fun getAlbumArt(context: Context?, song: MusicUiDto.SongUiDto?) {
         context ?: return // Can't do much with a null context...
 
         val roundedAlbumArt = song?.let {
-            val albumArtBitmap = factory.getAlbumArt(context, song.albumId)
-            return@let factory.getRoundedCornerBitmap(albumArtBitmap, 50)
+            val albumArtBitmap = albumArtFactory.getAlbumArt(context, song.albumId)
+            return@let albumArtFactory.getRoundedCornerBitmap(albumArtBitmap, 50)
         } ?: BitmapFactory.decodeResource(context.resources, R.drawable.octave) // Default to the app logo if null.
 
         viewModelScope.launch {

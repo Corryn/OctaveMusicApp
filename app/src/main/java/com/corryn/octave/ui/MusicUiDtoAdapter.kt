@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.corryn.octave.databinding.ListItemArtistBinding
 import com.corryn.octave.databinding.ListItemSongBinding
-import com.corryn.octave.model.MusicUiDto
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.consts.PlayerAction
 
 class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) -> Unit) : ListAdapter<MusicUiDto, RecyclerView.ViewHolder>(MusicUiDtoDiffer()) {

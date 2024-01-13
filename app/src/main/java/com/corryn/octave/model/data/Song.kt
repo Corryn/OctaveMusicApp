@@ -1,4 +1,4 @@
-package com.corryn.octave.model
+package com.corryn.octave.model.data
 
 data class Song(
     val id: Long,

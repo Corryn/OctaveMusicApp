@@ -6,12 +6,12 @@
     android:background="@color/white">
 
     <TextView
-        android:id="@+id/artistLabel"
+        android:id="@+id/music_menu_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="10dp"
-        android:text="@string/music_menu_artists"
+        android:text="@string/music_menu_title"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/black"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,7 +27,7 @@
         android:paddingRight="5dp"
         app:layout_constraintEnd_toStartOf="@id/clearSearch"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/artistLabel" />
+        app:layout_constraintTop_toBottomOf="@id/music_menu_title" />
 
     <TextView
         android:id="@+id/clearSearch"

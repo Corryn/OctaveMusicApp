@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.corryn.octave.R
 import com.corryn.octave.databinding.ActivityOctaveBinding
-import com.corryn.octave.model.SongUiDto
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.ui.base.BaseActivity
 import com.corryn.octave.ui.dialog.StoragePermissionDeniedDialog
 import com.corryn.octave.ui.dialog.StoragePermissionRationaleDialog
@@ -23,6 +23,7 @@ import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// TODO Dependency injection
 // TODO Convert noSongPicked to be a VM flow emit?
 // TODO Figure out how to set current song as active media (for car, etc.)
 // TODO Notification media controls?
@@ -60,6 +61,12 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
                         showNowPlayingToast(it)
                     }
                 }
+
+                launch {
+                    vM.playlistUpdatedMessage.collect {
+                        showPlaylistUpdatedToast(it)
+                    }
+                }
             }
         }
     }
@@ -70,7 +77,6 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
         with(vM) {
             preparePlayer(this@OctaveActivity)
             updateNowPlayingAndUpNext()
-            getAlbumArt(vM.selectedSong, this@OctaveActivity)
         }
     }
 
@@ -182,9 +188,9 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
         }
     }
 
-    private fun showNowPlayingToast(song: SongUiDto?) {
+    private fun showNowPlayingToast(song: MusicUiDto.SongUiDto?) {
         val toastMessage = if (song != null) {
-            getString(R.string.now_playing, song.title, song.artist)
+            getString(R.string.now_playing, song.songName, song.artistName)
         } else {
             null
         }
@@ -192,6 +198,11 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
         toastMessage?.let {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showPlaylistUpdatedToast(song: MusicUiDto.SongUiDto) {
+        val message = getString(R.string.added_to_queue, song.songName)
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
 }
