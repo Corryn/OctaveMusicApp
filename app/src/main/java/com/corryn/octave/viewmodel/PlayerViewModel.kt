@@ -38,10 +38,10 @@ class PlayerViewModel : ViewModel() {
 
     private var songList: Map<Long, Song> = HashMap()
     private var artists: List<Artist> = emptyList()
-    var artistToSongsMap: Map<Long, List<Song>> = HashMap()
-    var activeList: List<MusicUiDto>? = null
-
+    private var artistToSongsMap: Map<Long, List<Song>> = HashMap()
     private val playlist = LinkedList<Song>()
+
+    var activeList: List<MusicUiDto>? = null
 
     private val isPaused: Boolean
         get() = !player.isPlaying
