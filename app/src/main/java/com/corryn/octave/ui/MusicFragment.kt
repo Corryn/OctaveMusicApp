@@ -9,8 +9,6 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
@@ -23,8 +21,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.corryn.octave.R
 import com.corryn.octave.databinding.FragmentMusicBinding
-import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.consts.PlayerAction
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -138,9 +136,6 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         }
 
         clearSearch.setOnClickListener { v ->
-            val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-            animation.duration = 500
-            v.startAnimation(animation)
             if (searchBar.text.toString() != "") {
                 vM.isSearching = false
                 searchBar.text?.clear()
@@ -152,20 +147,12 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         searchBar.text?.clear()
         vM.isSearching = false
 
-        val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-        animation.duration = 500
-        playerMenuList.startAnimation(animation)
-
         vM.showArtists()
         setAlbumArt(null)
         viewingSongs = false
     }
 
     private fun onArtistClicked(artistId: Long) {
-        val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-        animation.duration = 500
-        binding.playerMenuList.startAnimation(animation)
-
         binding.searchBar.text.clear()
 
         vM.selectArtist(artistId)
