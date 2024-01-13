@@ -141,12 +141,12 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         viewingSongs = false
     }
 
-    private fun onArtistClicked(artist: String) {
+    private fun onArtistClicked(artistId: Long) {
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
         binding.playerMenuList.startAnimation(animation)
 
-        val artistSongs: List<Song> = vM.byArtistList[artist] ?: return
+        val artistSongs: List<Song> = vM.byArtistList[artistId] ?: return
 
         binding.playerMenuList.adapter = songAdapter.also {
             it.submitList(artistSongs)

@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corryn.octave.R
+import com.corryn.octave.model.Artist
 import com.corryn.octave.model.Song
 import com.corryn.octave.model.SongUiDto
 import com.corryn.octave.repository.MusicRepository
@@ -33,8 +34,8 @@ class PlayerViewModel : ViewModel() {
     private val factory = AlbumBitmapFactory()
 
     private var songList: List<Song> = emptyList()
-    var artistList: List<String> = emptyList()
-    var byArtistList = HashMap<String, MutableList<Song>>()
+    var artistList: List<Artist> = emptyList()
+    var byArtistList: Map<Long, List<Song>> = HashMap()
     var activeList: List<Song?>? = null
     var viewedList: List<Song>? = null
 
@@ -72,13 +73,24 @@ class PlayerViewModel : ViewModel() {
 
     fun preparePlayer(context: Context?) {
         byArtistList = repository.createArtistSongHashMap(context).also {
-            artistList = it.keys.toList().sorted()
+            artistList = makeArtistList(it).sortedBy { artist -> artist.name }
             songList = it.values.flatten()
         }
 
         player.setOnCompletionListener {
             nextSong(context)
         }
+    }
+
+    // TODO Temporary, remove the need for rebuilding an artist list when we already kinda do it during song list build
+    private fun makeArtistList(songMap: Map<Long, List<Song>>): List<Artist> {
+        val artists = mutableListOf<Artist>()
+
+        for(artist in songMap) {
+            artists.add(Artist(artist.key, artist.value.first().artist))
+        }
+
+        return artists
     }
 
     // The current song is always set by playing it, but the next song can be set without playing it immediately.
@@ -196,7 +208,7 @@ class PlayerViewModel : ViewModel() {
 
             nowPlayingIndex = songIndex
 
-            val currentSongInfo = SongUiDto(song.title, song.artist)
+            val currentSongInfo = SongUiDto(song.id, song.title, song.artist)
             val nextSongInfo = getNextSongInfo()
 
             viewModelScope.launch {
@@ -215,8 +227,8 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    private fun setSong(s: Song, context: Context?) {
-        val uri = Uri.parse(fileUriPrefix + s.data)
+    private fun setSong(song: Song, context: Context?) {
+        val uri = Uri.parse(fileUriPrefix + song.data)
 
         try {
             player.apply {
@@ -237,9 +249,9 @@ class PlayerViewModel : ViewModel() {
                 }
             }
 
-            nowPlayingIndex = activeList!!.indexOf(s)
+            nowPlayingIndex = activeList!!.indexOf(song)
 
-            val currentSongInfo = SongUiDto(s.title, s.artist)
+            val currentSongInfo = SongUiDto(song.id, song.title, song.artist)
             val nextSongInfo = getNextSongInfo()
 
             viewModelScope.launch {
@@ -268,7 +280,7 @@ class PlayerViewModel : ViewModel() {
 
     fun getNextSongInfo(): SongUiDto? {
         return playlist.peek()?.let {
-            SongUiDto(it.title, it.artist)
+            SongUiDto(it.id, it.title, it.artist)
         }
     }
 

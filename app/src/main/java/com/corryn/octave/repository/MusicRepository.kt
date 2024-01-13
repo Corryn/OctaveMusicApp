@@ -14,58 +14,67 @@ class MusicRepository {
             return Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state
         }
 
-    fun createArtistSongHashMap(context: Context?): HashMap<String, MutableList<Song>> {
-        if (isExternalStorageReadable) {
-            val musicProjection = arrayOf(
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.ALBUM_ID,
-                MediaStore.Audio.Albums.ARTIST,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.DATA
-            )
+    private val musicProjection = arrayOf(
+        MediaStore.Audio.Media._ID,
+        MediaStore.Audio.Media.ARTIST_ID,
+        MediaStore.Audio.Media.ALBUM_ID,
+        MediaStore.Audio.Media.TITLE,
+        MediaStore.Audio.Media.ARTIST,
+        MediaStore.Audio.Media.ALBUM,
+        MediaStore.Audio.Media.DATA
+    )
 
-            val musicSelection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+    private val allMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+    private val artistSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.ARTIST_ID} = ?"
 
-            val songs = mutableListOf<Song>()
-
-            context?.contentResolver?.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                musicProjection,
-                musicSelection,
-                null,
-                null
-            )?.use { musicCursor ->
-                while (musicCursor.moveToNext()) {
-                    songs.add(processSong(musicCursor))
-                }
-            }
-
-            val map = HashMap<String, MutableList<Song>>()
-            for (song in songs) {
-                val songsByArtist = map[song.artist]
-
-                if (songsByArtist == null) {
-                    map[song.artist] = mutableListOf(song)
-                } else {
-                    songsByArtist.add(song)
-                }
-            }
-
-            return map
+    fun createArtistSongHashMap(context: Context?): Map<Long, List<Song>> {
+        return if (isExternalStorageReadable) {
+            getSongsBySelection(context, allMusicSelection).groupBy { it.artistId }
         } else {
             // TODO Dialog with warning? Means to retry?
-            return HashMap()
+            HashMap()
         }
     }
 
-    private fun processSong(musicCursor: Cursor): Song {
-        val thisId = musicCursor.getLong(0)
-        val thisAlbumId = musicCursor.getLong(1)
-        val thisArtist = musicCursor.getString(2)
-        val thisTitle = musicCursor.getString(3)
-        val thisData = musicCursor.getString(4)
+    fun getSongsForArtist(context: Context?, artistId: Long): List<Song> {
+        return if (isExternalStorageReadable) {
+            getSongsBySelection(context, artistSelection, arrayOf(artistId.toString()))
+        } else {
+            emptyList()
+        }
+    }
 
-        return Song(thisId, thisAlbumId, thisTitle, thisArtist, thisData)
+    private fun getSongsBySelection(context: Context?, selection: String, selectionArgs: Array<String> = emptyArray()): List<Song> {
+        val songs = mutableListOf<Song>()
+
+        context?.contentResolver?.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            musicProjection,
+            selection,
+            null,
+            null
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                processSong(cursor).also {
+                    songs.add(it)
+                }
+            }
+        }
+
+        return songs
+    }
+
+    // TODO Find a better way to do the indices?
+    private fun processSong(cursor: Cursor): Song {
+        val songId = cursor.getLong(0)
+        val artistId = cursor.getLong(1)
+        val albumId = cursor.getLong(2)
+        val title = cursor.getString(3)
+        val artist = cursor.getString(4)
+        val album = cursor.getString(5)
+        val data = cursor.getString(6)
+
+        return Song(songId, artistId, albumId, title, artist, album, data)
     }
 
 }
