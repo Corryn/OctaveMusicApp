@@ -158,6 +158,8 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
+    // TODO If a playlist ends and the active list contains that song, it can find the next one and continue.
+    // TODO Consider ways to improve on this?
     fun nextSong(context: Context?) {
         val song = playlist.removeFirstOrNull()
 
