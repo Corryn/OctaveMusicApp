@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentPlayerBinding
-import com.corryn.octave.model.SongUiDto
+import com.corryn.octave.model.MusicUiDto
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -136,17 +136,17 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
         findNavController().navigate(PlayerFragmentDirections.actionPlayerFragmentToMusicFragment())
     }
 
-    private fun setNowPlaying(song: SongUiDto?) {
+    private fun setNowPlaying(song: MusicUiDto.SongUiDto?) {
         binding.playerNowPlaying.text = if (song != null) {
-            getString(R.string.now_playing, song.title, song.artist)
+            getString(R.string.now_playing, song.songName, song.artistName)
         } else {
             getString(R.string.now_playing_default)
         }
     }
 
-    private fun setUpNext(song: SongUiDto?) {
+    private fun setUpNext(song: MusicUiDto.SongUiDto?) {
         binding.playlistUpNext.apply {
-            text = if (song != null) getString(R.string.up_next, song.title, song.artist) else ""
+            text = if (song != null) getString(R.string.up_next, song.songName, song.artistName) else ""
             isVisible = text.isNotBlank()
         }
     }

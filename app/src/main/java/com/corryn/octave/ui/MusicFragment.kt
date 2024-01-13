@@ -14,7 +14,6 @@ import android.view.animation.Animation
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -24,21 +23,21 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.corryn.octave.R
 import com.corryn.octave.databinding.FragmentMusicBinding
-import com.corryn.octave.model.Song
+import com.corryn.octave.model.MusicUiDto
+import com.corryn.octave.model.consts.PlayerAction
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActionListener {
+class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActionListener {
 
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentMusicBinding
         get() = FragmentMusicBinding::inflate
 
     private val vM: PlayerViewModel by activityViewModels()
 
-    private val artistAdapter: ArtistAdapter = ArtistAdapter(::onArtistClicked)
-    private val songAdapter = SongAdapter(::onSongClicked, ::onPlayClicked, ::onAddClicked)
+    private val musicAdapter = MusicUiDtoAdapter(::onMusicItemClicked)
 
     private var viewingSongs = false
 
@@ -54,10 +53,24 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 launch {
+                    vM.uiItems.collectLatest {
+                        musicAdapter.submitList(it)
+                    }
+                }
+
+                launch {
+                    vM.selectedSong.collectLatest {
+                        vM.getAlbumArt(context, it)
+                    }
+                }
+
+                launch {
                     vM.albumArt.collectLatest {
                         setAlbumArt(it)
                     }
                 }
+
+                vM.showArtists()
             }
         }
     }
@@ -70,6 +83,33 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         }
     }
 
+    private fun onMusicItemClicked(item: MusicUiDto, action: PlayerAction) {
+        when (item) {
+            is MusicUiDto.ArtistUiDto -> {
+                when (action) {
+                    PlayerAction.TAP -> {
+                        onArtistClicked(item.id)
+                    }
+                    else -> throw UnsupportedOperationException("Artist items do not support this action yet")
+                }
+            }
+
+            is MusicUiDto.SongUiDto -> {
+                when (action) {
+                    PlayerAction.TAP -> {
+                        onSongClicked(item.id)
+                    }
+                    PlayerAction.PLAY -> {
+                        onSongPlayClicked(item.id)
+                    }
+                    PlayerAction.ADD -> {
+                        onSongAddClicked(item.id)
+                    }
+                }
+            }
+        }
+    }
+
     private fun setUpMenuInteractions() = with(binding) {
         playerMenuList.apply {
             layoutManager = LinearLayoutManager(context)
@@ -78,9 +118,7 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
                     setDrawable(it)
                 }
             })
-            adapter = artistAdapter.also {
-                it.submitList(vM.artistList)
-            }
+            adapter = musicAdapter
         }
 
         searchBar.apply {
@@ -90,11 +128,7 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
 
                 override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                     val searchString = s.toString().trim { it <= ' ' }
-                    playerMenuList.apply {
-                        adapter = songAdapter.also {
-                            it.submitList(vM.filterSongs(searchString))
-                        }
-                    }
+                    vM.filterUi(searchString)
                     vM.isSearching = searchString != ""
                 }
 
@@ -113,14 +147,6 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        if (vM.selected != -1) {
-            binding.playerMenuList.scrollToPosition(vM.selected)
-        }
-    }
-
     private fun returnToArtistList() = with(binding) {
         searchBar.text?.clear()
         vM.isSearching = false
@@ -129,14 +155,11 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         clearSearch.visibility = View.INVISIBLE
         artistLabel.visibility = View.VISIBLE
 
-        vM.viewedList = null
-
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
         playerMenuList.startAnimation(animation)
 
-        playerMenuList.adapter = artistAdapter
-        songAdapter.submitList(emptyList())
+        vM.showArtists()
         setAlbumArt(null)
         viewingSongs = false
     }
@@ -146,13 +169,7 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         animation.duration = 500
         binding.playerMenuList.startAnimation(animation)
 
-        val artistSongs: List<Song> = vM.byArtistList[artistId] ?: return
-
-        binding.playerMenuList.adapter = songAdapter.also {
-            it.submitList(artistSongs)
-        }
-
-        vM.viewedList = artistSongs
+        vM.selectArtist(artistId)
 
         with(binding) {
             artistLabel.visibility = View.INVISIBLE
@@ -163,41 +180,31 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         viewingSongs = true
     }
 
-    private fun onSongClicked(song: Song, position: Int) {
-        vM.selected = position
-        vM.getAlbumArt(song, context)
+    private fun onSongClicked(songId: Long) {
+        vM.selectSongById(songId)
     }
 
-    private fun onPlayClicked(song: Song, activeList: List<Song>) {
+    // TODO These behaviors should be internalized to the viewmodel
+    private fun onSongPlayClicked(songId: Long) {
         when {
             vM.isSearching -> {
-                vM.activeList = vM.viewedList
-                vM.setSong(context, vM.getSongIndex(song))
+                vM.setSong(context, songId)
             }
+
             vM.playlistIsEmpty().not() -> {
-                val temp: List<Song?>? = vM.activeList
-                vM.activeList = activeList
-                vM.setSong(context, vM.getSongIndex(song))
-                vM.activeList = temp
+                vM.setSong(context, songId)
             }
+
             else -> {
-                vM.activeList = activeList
-                vM.setSong(context, vM.getSongIndex(song))
+                vM.activeList = musicAdapter.currentList
+                vM.setSong(context, songId)
             }
         }
     }
 
-    private fun onAddClicked(song: Song, activeList: List<Song>) {
-        if (vM.isSearching) {
-            vM.activeList = vM.viewedList
-        } else {
-            vM.activeList = activeList
-        }
-
-        vM.addToPlaylist(song)
-
-        val message = getString(R.string.added_to_queue, song.title)
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    private fun onSongAddClicked(songId: Long) {
+        vM.activeList = musicAdapter.currentList
+        vM.addToPlaylist(songId)
     }
 
     private fun setAlbumArt(bitmap: Bitmap?) {
@@ -221,11 +228,7 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
             return false
         } else {
             val searchString = v.text.toString().trim { it <= ' ' }
-            binding.playerMenuList.apply {
-                adapter = songAdapter.also {
-                    it.submitList(vM.filterSongs(searchString))
-                }
-            }
+            vM.filterUi(searchString)
         }
 
         return true

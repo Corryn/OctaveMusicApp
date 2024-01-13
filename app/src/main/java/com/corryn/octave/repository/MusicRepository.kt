@@ -24,8 +24,9 @@ class MusicRepository {
         MediaStore.Audio.Media.DATA
     )
 
-    private val allMusicSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-    private val artistSelection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.ARTIST_ID} = ?"
+    private val allMusicSelection: String = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+    private val artistSelection: String = "$allMusicSelection AND ${MediaStore.Audio.Media.ARTIST_ID} = ?"
+    private val albumSelection: String = "$allMusicSelection AND ${MediaStore.Audio.Media.ALBUM_ID} = ?"
 
     fun createArtistSongHashMap(context: Context?): Map<Long, List<Song>> {
         return if (isExternalStorageReadable) {
@@ -39,6 +40,14 @@ class MusicRepository {
     fun getSongsForArtist(context: Context?, artistId: Long): List<Song> {
         return if (isExternalStorageReadable) {
             getSongsBySelection(context, artistSelection, arrayOf(artistId.toString()))
+        } else {
+            emptyList()
+        }
+    }
+
+    fun getSongsForAlbum(context: Context?, albumId: Long): List<Song> {
+        return if (isExternalStorageReadable) {
+            getSongsBySelection(context, albumSelection, arrayOf(albumId.toString()))
         } else {
             emptyList()
         }
