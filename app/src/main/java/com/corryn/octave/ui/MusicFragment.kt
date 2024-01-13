@@ -172,17 +172,17 @@ class MusicFragment: BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActi
         when {
             vM.isSearching -> {
                 vM.activeList = vM.viewedList
-                vM.setSong(vM.getSongIndex(song), context)
+                vM.setSong(context, vM.getSongIndex(song))
             }
             vM.playlistIsEmpty().not() -> {
                 val temp: List<Song?>? = vM.activeList
                 vM.activeList = activeList
-                vM.setSong(vM.getSongIndex(song), context)
+                vM.setSong(context, vM.getSongIndex(song))
                 vM.activeList = temp
             }
             else -> {
                 vM.activeList = activeList
-                vM.setSong(vM.getSongIndex(song), context)
+                vM.setSong(context, vM.getSongIndex(song))
             }
         }
     }

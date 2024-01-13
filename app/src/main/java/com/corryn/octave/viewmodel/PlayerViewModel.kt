@@ -28,7 +28,7 @@ import java.util.Random
 // TODO Separate error flow for error messages
 class PlayerViewModel : ViewModel() {
 
-    val player = MediaPlayer()
+    private val player = MediaPlayer()
 
     private val repository = MusicRepository()
     private val factory = AlbumBitmapFactory()
@@ -44,13 +44,15 @@ class PlayerViewModel : ViewModel() {
     private var nowPlayingIndex = -1
     var selected = -1
 
-    private var repeat = false
-    private var shuffle = false
-
     private val isPaused: Boolean
         get() = !player.isPlaying
 
+    private var repeat = false
+    private var shuffle = false
+
     var isSearching = false
+
+    // region Flows
 
     private val _playingState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val playingState: StateFlow<Boolean> = _playingState.asStateFlow()
@@ -66,6 +68,8 @@ class PlayerViewModel : ViewModel() {
 
     private val _albumArt: MutableSharedFlow<Bitmap?> = MutableSharedFlow()
     val albumArt: SharedFlow<Bitmap?> = _albumArt.asSharedFlow()
+
+    // endregion
 
     // Expects a string resource.
     private val _errorMessage: MutableSharedFlow<Int> = MutableSharedFlow()
@@ -127,12 +131,12 @@ class PlayerViewModel : ViewModel() {
         val song = playlist.removeFirstOrNull()
 
         when {
-            song != null -> setSong(song, context)
+            song != null -> setSong(context, song)
             shuffle -> shuffle(context)
-            nowPlayingIndex + 1 < activeList!!.size -> setSong(++nowPlayingIndex, context)
+            nowPlayingIndex + 1 < activeList!!.size -> setSong(context, ++nowPlayingIndex)
             else -> {
                 nowPlayingIndex = 0
-                setSong(nowPlayingIndex, context)
+                setSong(context, nowPlayingIndex)
             }
         }
     }
@@ -141,10 +145,10 @@ class PlayerViewModel : ViewModel() {
         if (playlist.isEmpty()) {
             when {
                 shuffle -> shuffle(context)
-                nowPlayingIndex - 1 >= 0 -> setSong(--nowPlayingIndex, context)
+                nowPlayingIndex - 1 >= 0 -> setSong(context, --nowPlayingIndex)
                 else -> {
                     nowPlayingIndex = activeList!!.size - 1
-                    setSong(nowPlayingIndex, context)
+                    setSong(context, nowPlayingIndex)
                 }
             }
         }
@@ -168,7 +172,7 @@ class PlayerViewModel : ViewModel() {
         val random: Int
         val r = Random()
         random = r.nextInt(activeList!!.size)
-        setSong(random, context)
+        setSong(context, random)
     }
 
     fun toggleRepeat(): Boolean {
@@ -183,51 +187,18 @@ class PlayerViewModel : ViewModel() {
     }
 
     // TODO Handle null song selection?
-    fun setSong(songIndex: Int, context: Context?) {
+    fun setSong(context: Context?, songIndex: Int) {
         val song = activeList?.getOrNull(songIndex) ?: return
-        val uri = Uri.parse(fileUriPrefix + song.data)
-
-        try {
-            player.apply {
-                reset()
-
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                setDataSource(context ?: throw IOException(), uri)
-
-                prepare()
-                start()
-
-                if (repeat) {
-                    isLooping = true
-                }
-            }
-
-            nowPlayingIndex = songIndex
-
-            val currentSongInfo = SongUiDto(song.id, song.title, song.artist)
-            val nextSongInfo = getNextSongInfo()
-
-            viewModelScope.launch {
-                _playingState.emit(isPaused.not())
-                _currentSong.emit(currentSongInfo)
-                _nowPlayingMessage.emit(currentSongInfo)
-                _nextSong.emit(nextSongInfo)
-            }
-        } catch (e: IOException) {
-            viewModelScope.launch {
-                _playingState.emit(false)
-                _currentSong.emit(null)
-                _nextSong.emit(null)
-                _errorMessage.emit(R.string.file_not_found_error)
-            }
-        }
+        playSong(context, song, songIndex)
     }
 
-    private fun setSong(song: Song, context: Context?) {
+    // TODO Handle null song selection?
+    private fun setSong(context: Context?, song: Song) {
+        val songIndex = activeList?.indexOf(song) ?: return
+        playSong(context, song, songIndex)
+    }
+
+    private fun playSong(context: Context?, song: Song, index: Int) {
         val uri = Uri.parse(fileUriPrefix + song.data)
 
         try {
@@ -249,7 +220,7 @@ class PlayerViewModel : ViewModel() {
                 }
             }
 
-            nowPlayingIndex = activeList!!.indexOf(song)
+            nowPlayingIndex = index
 
             val currentSongInfo = SongUiDto(song.id, song.title, song.artist)
             val nextSongInfo = getNextSongInfo()
@@ -278,7 +249,7 @@ class PlayerViewModel : ViewModel() {
         return _currentSong.value
     }
 
-    fun getNextSongInfo(): SongUiDto? {
+    private fun getNextSongInfo(): SongUiDto? {
         return playlist.peek()?.let {
             SongUiDto(it.id, it.title, it.artist)
         }
