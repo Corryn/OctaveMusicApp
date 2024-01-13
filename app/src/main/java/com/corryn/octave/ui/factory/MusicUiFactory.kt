@@ -1,8 +1,8 @@
 package com.corryn.octave.ui.factory
 
-import com.corryn.octave.model.Artist
-import com.corryn.octave.model.MusicUiDto
-import com.corryn.octave.model.Song
+import com.corryn.octave.model.data.Artist
+import com.corryn.octave.model.dto.MusicUiDto
+import com.corryn.octave.model.data.Song
 
 class MusicUiFactory {
 

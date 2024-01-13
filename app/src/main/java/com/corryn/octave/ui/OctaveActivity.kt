@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.corryn.octave.R
 import com.corryn.octave.databinding.ActivityOctaveBinding
-import com.corryn.octave.model.MusicUiDto
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.ui.base.BaseActivity
 import com.corryn.octave.ui.dialog.StoragePermissionDeniedDialog
 import com.corryn.octave.ui.dialog.StoragePermissionRationaleDialog

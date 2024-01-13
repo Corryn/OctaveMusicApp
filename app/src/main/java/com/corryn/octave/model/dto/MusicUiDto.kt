@@ -1,4 +1,4 @@
-package com.corryn.octave.model
+package com.corryn.octave.model.dto
 
 sealed class MusicUiDto {
 

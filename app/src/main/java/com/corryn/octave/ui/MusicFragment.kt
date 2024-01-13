@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.corryn.octave.R
 import com.corryn.octave.databinding.FragmentMusicBinding
-import com.corryn.octave.model.MusicUiDto
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.consts.PlayerAction
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel

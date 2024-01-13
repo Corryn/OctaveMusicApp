@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.corryn.octave.databinding.FragmentPlayerBinding
-import com.corryn.octave.model.MusicUiDto
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.ui.base.BaseFragment
 import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest

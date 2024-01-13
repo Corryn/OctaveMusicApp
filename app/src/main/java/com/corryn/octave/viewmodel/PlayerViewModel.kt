@@ -9,9 +9,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corryn.octave.R
-import com.corryn.octave.model.Artist
-import com.corryn.octave.model.MusicUiDto
-import com.corryn.octave.model.Song
+import com.corryn.octave.model.data.Artist
+import com.corryn.octave.model.dto.MusicUiDto
+import com.corryn.octave.model.data.Song
 import com.corryn.octave.model.toDto
 import com.corryn.octave.repository.MusicRepository
 import com.corryn.octave.ui.factory.AlbumBitmapFactory

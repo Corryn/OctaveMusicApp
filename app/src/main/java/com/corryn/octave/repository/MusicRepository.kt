@@ -4,7 +4,7 @@ import android.content.Context
 import android.database.Cursor
 import android.os.Environment
 import android.provider.MediaStore
-import com.corryn.octave.model.Song
+import com.corryn.octave.model.data.Song
 
 class MusicRepository {
 
