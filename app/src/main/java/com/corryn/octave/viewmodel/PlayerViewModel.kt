@@ -28,6 +28,7 @@ import java.util.LinkedList
 import java.util.Random
 
 // TODO Separate error flow for error messages
+// TODO Option to limit scope of shuffling?
 class PlayerViewModel : ViewModel() {
 
     private val player = MediaPlayer()
@@ -223,10 +224,8 @@ class PlayerViewModel : ViewModel() {
     }
 
     private fun shuffle(context: Context?) {
-        val random: Int
-        val r = Random()
-        random = r.nextInt(songList.size)
-        setSong(context, random)
+        val randomIndex = Random().nextInt(songList.size)
+        setSong(context, randomIndex)
     }
 
     fun toggleRepeat(): Boolean {
