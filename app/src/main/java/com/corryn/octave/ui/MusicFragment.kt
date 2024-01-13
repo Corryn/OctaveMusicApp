@@ -30,6 +30,7 @@ import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// TODO Album level view below artist (+ "all songs" meta-album)
 class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActionListener {
 
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentMusicBinding
@@ -151,10 +152,6 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         searchBar.text?.clear()
         vM.isSearching = false
 
-        searchBar.visibility = View.INVISIBLE
-        clearSearch.visibility = View.INVISIBLE
-        artistLabel.visibility = View.VISIBLE
-
         val animation: Animation = AlphaAnimation(0.3f, 1.0f)
         animation.duration = 500
         playerMenuList.startAnimation(animation)
@@ -169,13 +166,9 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         animation.duration = 500
         binding.playerMenuList.startAnimation(animation)
 
-        vM.selectArtist(artistId)
+        binding.searchBar.text.clear()
 
-        with(binding) {
-            artistLabel.visibility = View.INVISIBLE
-            searchBar.visibility = View.VISIBLE
-            clearSearch.visibility = View.VISIBLE
-        }
+        vM.selectArtist(artistId)
 
         viewingSongs = true
     }

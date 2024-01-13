@@ -23,6 +23,7 @@ import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// TODO Dependency injection
 // TODO Convert noSongPicked to be a VM flow emit?
 // TODO Figure out how to set current song as active media (for car, etc.)
 // TODO Notification media controls?
