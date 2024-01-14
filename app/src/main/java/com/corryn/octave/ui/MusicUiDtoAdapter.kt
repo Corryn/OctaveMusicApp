@@ -9,10 +9,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.corryn.octave.databinding.ListItemArtistBinding
 import com.corryn.octave.databinding.ListItemSongBinding
-import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.consts.PlayerAction
+import com.corryn.octave.model.dto.MusicUiDto
 
-class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) -> Unit) : ListAdapter<MusicUiDto, RecyclerView.ViewHolder>(MusicUiDtoDiffer()) {
+class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) -> Unit) :
+    ListAdapter<MusicUiDto, RecyclerView.ViewHolder>(MusicUiDtoDiffer()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -55,7 +56,7 @@ class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) ->
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(song: MusicUiDto.SongUiDto) = with(binding) {
-            root.isActivated = adapterPosition % 2 == 1
+            root.isActivated = song.activated
 
             songTitle.text = song.songName
             songArtist.text = song.artistName
@@ -87,7 +88,7 @@ class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) ->
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(artist: MusicUiDto.ArtistUiDto) = with(binding) {
-            root.isActivated = adapterPosition % 2 == 1
+            root.isActivated = artist.activated
 
             artistName.text = artist.name
 
@@ -111,11 +112,14 @@ private class MusicUiDtoDiffer : DiffUtil.ItemCallback<MusicUiDto>() {
 
     override fun areContentsTheSame(oldItem: MusicUiDto, newItem: MusicUiDto): Boolean {
         return when {
+            oldItem.activated != newItem.activated -> false
+
             oldItem is MusicUiDto.SongUiDto && newItem is MusicUiDto.SongUiDto -> {
                 oldItem.songName == newItem.songName && oldItem.artistName == newItem.artistName
             }
 
             oldItem is MusicUiDto.ArtistUiDto && newItem is MusicUiDto.ArtistUiDto -> oldItem.name == newItem.name
+
             else -> false
         }
     }

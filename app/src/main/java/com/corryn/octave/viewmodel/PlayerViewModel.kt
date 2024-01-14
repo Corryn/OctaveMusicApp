@@ -27,6 +27,7 @@ import java.io.IOException
 import java.util.LinkedList
 import java.util.Random
 
+// TODO Should separate out MusicUiDtos and flow-used data-passing dtos (MusicUiDto for UI, something else for data passing)
 // TODO Separate error flow for error messages
 // TODO Option to limit scope of shuffling?
 class PlayerViewModel : ViewModel() {
