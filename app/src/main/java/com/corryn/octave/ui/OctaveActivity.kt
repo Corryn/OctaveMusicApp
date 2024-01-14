@@ -23,6 +23,7 @@ import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// TODO Dark theme; set up UI to use theme colors
 // TODO Checking for stale MediaStore and re-initializing media data
 // TODO Dependency injection
 // TODO Convert noSongPicked to be a VM flow emit?

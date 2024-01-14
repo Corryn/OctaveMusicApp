@@ -4,11 +4,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.corryn.octave.databinding.ListItemArtistBinding
-import com.corryn.octave.databinding.ListItemSongBinding
+import com.corryn.octave.databinding.ListItemMusicBinding
 import com.corryn.octave.model.consts.PlayerAction
 import com.corryn.octave.model.dto.MusicUiDto
 
@@ -20,12 +20,12 @@ class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) ->
 
         return when (viewType) {
             0 -> {
-                val binding = ListItemSongBinding.inflate(inflater, parent, false)
+                val binding = ListItemMusicBinding.inflate(inflater, parent, false)
                 SongViewHolder(binding, onItemClicked)
             }
 
             1 -> {
-                val binding = ListItemArtistBinding.inflate(inflater, parent, false)
+                val binding = ListItemMusicBinding.inflate(inflater, parent, false)
                 ArtistViewHolder(binding, onItemClicked)
             }
 
@@ -51,49 +51,60 @@ class MusicUiDtoAdapter(private val onItemClicked: (MusicUiDto, PlayerAction) ->
     }
 
     inner class SongViewHolder(
-        private val binding: ListItemSongBinding,
+        private val binding: ListItemMusicBinding,
         private val onItemClicked: (MusicUiDto.SongUiDto, PlayerAction) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(song: MusicUiDto.SongUiDto) = with(binding) {
-            root.isActivated = song.activated
-
-            songTitle.text = song.songName
-            songArtist.text = song.artistName
-
-            root.setOnClickListener {
-                val animation: Animation = AlphaAnimation(0.3f, 1.0f)
-                animation.duration = 500
-                it.startAnimation(animation)
-
-                onItemClicked(song, PlayerAction.TAP)
+            title.text = song.songName
+            subtitle.apply {
+                isVisible = true
+                text = song.artistName
             }
 
-            menuPlay.setOnClickListener {
-                onItemClicked(song, PlayerAction.PLAY)
-                root.performClick() // To trigger album art update
+            playButton.apply {
+                isVisible = true
+                setOnClickListener {
+                    onItemClicked(song, PlayerAction.PLAY)
+                    root.performClick() // To trigger album art update
+                }
             }
 
-            menuAdd.setOnClickListener {
-                onItemClicked(song, PlayerAction.ADD)
-                root.performClick() // To trigger album art update
+            addButton.apply {
+                isVisible = true
+                setOnClickListener {
+                    onItemClicked(song, PlayerAction.ADD)
+                    root.performClick() // To trigger album art update
+                }
+            }
+
+            root.apply {
+                isActivated = song.activated
+                setOnClickListener {
+                    val animation: Animation = AlphaAnimation(0.3f, 1.0f)
+                    animation.duration = 500
+                    it.startAnimation(animation)
+
+                    onItemClicked(song, PlayerAction.TAP)
+                }
             }
         }
 
     }
 
     inner class ArtistViewHolder(
-        private val binding: ListItemArtistBinding,
+        private val binding: ListItemMusicBinding,
         private val onItemClicked: (MusicUiDto.ArtistUiDto, PlayerAction) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(artist: MusicUiDto.ArtistUiDto) = with(binding) {
-            root.isActivated = artist.activated
+            title.text = artist.name
 
-            artistName.text = artist.name
-
-            root.setOnClickListener {
-                onItemClicked(artist, PlayerAction.TAP)
+            root.apply {
+                isActivated = artist.activated
+                setOnClickListener {
+                    onItemClicked(artist, PlayerAction.TAP)
+                }
             }
         }
 
