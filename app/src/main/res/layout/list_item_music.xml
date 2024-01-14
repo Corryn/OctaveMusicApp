@@ -53,29 +53,31 @@
 
         <!-- We disable sound effects because we always trigger a click on the root list item. -->
         <!-- TODO Remove this once it's been refactored to be unnecessary. -->
-        <ImageView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/play_button"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_margin="5dp"
             android:soundEffectsEnabled="false"
-            android:src="@drawable/octaveplay"
+            app:iconTint="?attr/colorControlNormal"
             android:visibility="invisible"
+            app:icon="@drawable/octaveplay"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/add_button"
             app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible" />
 
-        <ImageView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/add_button"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_margin="5dp"
             android:soundEffectsEnabled="false"
-            android:src="@drawable/octaveplus"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#000000"
+            app:iconTint="?attr/colorControlNormal"
             android:visibility="invisible"
+            app:icon="@drawable/octaveplus"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

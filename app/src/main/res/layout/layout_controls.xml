@@ -7,52 +7,62 @@
     android:paddingTop="5dp"
     android:paddingBottom="5dp">
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/shuffle"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="30dp"
-        android:src="@drawable/octaveshuffle"
+        app:icon="@drawable/octaveshuffle"
+        app:iconTint="@color/player_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/previous"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/previous"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="30dp"
-        android:src="@drawable/octaveprevious"
+        app:icon="@drawable/octaveprevious"
+        app:iconTint="@color/player_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/pause"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/pause"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/playpause"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:icon="@drawable/playpause"
+        app:iconTint="@color/player_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/next"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
-        android:src="@drawable/octavenext"
+        app:icon="@drawable/octavenext"
+        app:iconTint="@color/player_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/pause"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/repeat"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
-        android:src="@drawable/octaverepeat"
+        app:icon="@drawable/octaverepeat"
+        app:iconTint="@color/player_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/next"
         app:layout_constraintTop_toTopOf="parent" />

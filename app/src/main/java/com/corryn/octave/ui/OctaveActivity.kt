@@ -133,7 +133,7 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
                 vM.pause()
             } else if (!vM.playlistIsEmpty()) {
                 vM.nextSong(this@OctaveActivity)
-                pause.setImageResource(R.drawable.octavepause)
+                pause.setIconResource(R.drawable.octavepause)
             } else {
                 noSongPicked()
             }
@@ -159,10 +159,10 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
             val res = vM.toggleRepeat()
             if (res) {
                 Toast.makeText(this@OctaveActivity, getString(R.string.repeat_on), Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeatactive)
+                repeat.isActivated = true
             } else {
                 Toast.makeText(this@OctaveActivity, getString(R.string.repeat_off), Toast.LENGTH_SHORT).show()
-                repeat.setImageResource(R.drawable.octaverepeat)
+                repeat.isActivated = false
             }
         }
 
@@ -170,10 +170,10 @@ class OctaveActivity: BaseActivity<ActivityOctaveBinding>(), StoragePermissionRa
             val res = vM.toggleShuffle()
             if (res) {
                 Toast.makeText(this@OctaveActivity, getString(R.string.shuffle_on), Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffleactive)
+                shuffle.isActivated = true
             } else {
                 Toast.makeText(this@OctaveActivity, getString(R.string.shuffle_off), Toast.LENGTH_SHORT).show()
-                shuffle.setImageResource(R.drawable.octaveshuffle)
+                shuffle.isActivated = false
             }
         }
     }
