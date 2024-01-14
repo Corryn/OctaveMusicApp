@@ -1,4 +1,4 @@
-package com.corryn.octave
+package com.corryn.octave.ui
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -14,6 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.corryn.octave.R
 import com.corryn.octave.databinding.FragmentPlayerBinding
 import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.ui.base.BaseFragment
@@ -22,7 +23,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-// TODO Update the now playing bar when navigating back to this screen; maybe make the current song a stateflow?
 // TODO Landscape version of music menu not working out of box, maybe because it isn't its own fragment?
 // TODO Load music metadata on request per artist, album, etc.
 // TODO Error dialog instead of error toast?
@@ -43,9 +43,9 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
 
         // Required for the text marquee to function.
         binding.playerNowPlaying.isSelected = true
-        binding.playlistUpNext.isSelected = true
+        binding.playerUpNext.isSelected = true
 
-        binding.downarrow.setOnClickListener { openMenu() }
+        binding.playerExpandMenu.setOnClickListener { openMenu() }
         setUpTouchInteractions()
 
         setMainArtBackgroundResource(this.resources.configuration)
@@ -75,7 +75,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
 
     private fun setUpTouchInteractions() = with(binding) {
         playerTitleBar.setOnTouchListener(swipeListener)
-        mainart.setOnTouchListener(swipeListener)
+        playerMainArt.setOnTouchListener(swipeListener)
     }
 
     private val swipeListener = View.OnTouchListener { view, event ->
@@ -92,8 +92,8 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
 
     private fun setMainArtBackgroundResource(config: Configuration) = with(binding) {
         when (config.orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> mainart.setImageResource(R.drawable.octavesplashlandscape)
-            Configuration.ORIENTATION_PORTRAIT -> mainart.setImageResource(R.drawable.octavesplashportrait)
+            Configuration.ORIENTATION_LANDSCAPE -> playerMainArt.setImageResource(R.drawable.octavesplashlandscape)
+            Configuration.ORIENTATION_PORTRAIT -> playerMainArt.setImageResource(R.drawable.octavesplashportrait)
         }
     }
 
@@ -145,7 +145,7 @@ class PlayerFragment : BaseFragment<FragmentPlayerBinding>() {
     }
 
     private fun setUpNext(song: MusicUiDto.SongUiDto?) {
-        binding.playlistUpNext.apply {
+        binding.playerUpNext.apply {
             text = if (song != null) getString(R.string.up_next, song.songName, song.artistName) else ""
             isVisible = text.isNotBlank()
         }

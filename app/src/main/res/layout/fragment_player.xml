@@ -16,9 +16,9 @@
 
         <!-- focusable properties+singleLine seem to be needed for text marquee. -->
         <TextView
-            android:id="@+id/playerNowPlaying"
+            android:id="@+id/player_now_playing"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:ellipsize="marquee"
             android:focusable="true"
             android:focusableInTouchMode="true"
@@ -31,14 +31,18 @@
             android:text="@string/now_playing_default"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@color/black"
-            app:layout_constraintEnd_toStartOf="@id/downarrow"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/player_expand_menu"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageView
-            android:id="@+id/downarrow"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/downarrow"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/player_expand_menu"
+            android:layout_width="wrap_content"
+            style="@style/Widget.Material3.Button.IconButton"
+            app:icon="@drawable/expand_more"
+            app:iconSize="40dp"
+            android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -46,7 +50,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
-        android:id="@+id/mainart"
+        android:id="@+id/player_main_art"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:scaleType="fitXY"
@@ -55,7 +59,7 @@
         app:layout_constraintTop_toBottomOf="@id/player_title_bar" />
 
     <TextView
-        android:id="@+id/playlistUpNext"
+        android:id="@+id/player_up_next"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ellipsize="marquee"

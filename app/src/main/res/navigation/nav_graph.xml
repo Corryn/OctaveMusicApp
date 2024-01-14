@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/playerFragment"
-        android:name="com.corryn.octave.PlayerFragment"
+        android:name="com.corryn.octave.ui.PlayerFragment"
         tools:layout="@layout/fragment_player">
         <action
             android:id="@+id/action_playerFragment_to_musicFragment"
