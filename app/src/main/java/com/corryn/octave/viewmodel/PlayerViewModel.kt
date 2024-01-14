@@ -10,8 +10,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corryn.octave.R
 import com.corryn.octave.model.data.Artist
-import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.data.Song
+import com.corryn.octave.model.dto.MusicUiDto
 import com.corryn.octave.model.toDto
 import com.corryn.octave.repository.MusicRepository
 import com.corryn.octave.ui.factory.AlbumBitmapFactory
@@ -49,9 +49,6 @@ class PlayerViewModel : ViewModel() {
 
     private var repeat = false
     private var shuffle = false
-
-    // TODO Evaluate need for this boolean
-    var isSearching = false
 
     // region Flows
 

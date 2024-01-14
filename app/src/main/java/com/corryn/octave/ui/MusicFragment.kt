@@ -1,18 +1,13 @@
 package com.corryn.octave.ui
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isNotEmpty
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,7 +24,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // TODO Album level view below artist (+ "all songs" meta-album)
-class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorActionListener {
+class MusicFragment : BaseFragment<FragmentMusicBinding>() {
 
     override val viewBindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentMusicBinding
         get() = FragmentMusicBinding::inflate
@@ -39,6 +34,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
     private val musicAdapter = MusicUiDtoAdapter(::onMusicItemClicked)
 
     private var viewingSongs = false
+    private fun isSearching() = binding.searchBar.isNotEmpty()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -121,31 +117,15 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         }
 
         searchBar.apply {
-            setOnEditorActionListener(this@MusicFragment)
-            addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                    val searchString = s.toString().trim { it <= ' ' }
-                    vM.filterUi(searchString)
-                    vM.isSearching = searchString != ""
-                }
-
-                override fun afterTextChanged(s: Editable) {}
-            })
-        }
-
-        clearSearch.setOnClickListener { v ->
-            if (searchBar.text.toString() != "") {
-                vM.isSearching = false
-                searchBar.text?.clear()
+            editText?.doAfterTextChanged { text ->
+                val searchString = text.toString().trim { it <= ' ' }
+                vM.filterUi(searchString)
             }
         }
     }
 
     private fun returnToArtistList() = with(binding) {
-        searchBar.text?.clear()
-        vM.isSearching = false
+        searchBar.editText?.text?.clear()
 
         vM.showArtists()
         setAlbumArt(null)
@@ -153,7 +133,7 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
     }
 
     private fun onArtistClicked(artistId: Long) {
-        binding.searchBar.text.clear()
+        binding.searchBar.editText?.text?.clear()
 
         vM.selectArtist(artistId)
 
@@ -164,10 +144,10 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
         vM.selectSongById(songId)
     }
 
-    // TODO These behaviors should be internalized to the viewmodel
+    // TODO Some of these behaviors should be internalized to the viewmodel
     private fun onSongPlayClicked(songId: Long) {
         when {
-            vM.isSearching -> {
+            isSearching() -> {
                 vM.setSong(context, songId)
             }
 
@@ -189,29 +169,6 @@ class MusicFragment : BaseFragment<FragmentMusicBinding>(), TextView.OnEditorAct
 
     private fun setAlbumArt(bitmap: Bitmap?) {
         binding.playerMenuArt?.setImageBitmap(bitmap)
-    }
-
-    override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
-            val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-
-            // NOTE: In the author's example, he uses an identifier
-            // called searchBar. If setting this code on your EditText
-            // then use v.getWindowToken() as a reference to your
-            // EditText is passed into this callback as a TextView
-            imm?.hideSoftInputFromWindow(v.applicationWindowToken, InputMethodManager.HIDE_NOT_ALWAYS)
-            // Must return true here to consume event
-            return true
-        }
-
-        if (actionId == EditorInfo.IME_ACTION_NEXT || event.keyCode == KeyEvent.KEYCODE_ENTER) {
-            return false
-        } else {
-            val searchString = v.text.toString().trim { it <= ' ' }
-            vM.filterUi(searchString)
-        }
-
-        return true
     }
 
 }

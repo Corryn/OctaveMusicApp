@@ -11,7 +11,7 @@
     </style>
 
     <!-- Base application theme. -->
-    <style name="Theme.Octave" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Octave" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/octaveLogoGreen</item>
         <item name="colorPrimaryDark">@color/octaveGreen</item>
