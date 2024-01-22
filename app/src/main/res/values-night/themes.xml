@@ -1,7 +1,11 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- TODO Base night mode application theme. -->
+<resources>
+
+    <!-- Base application theme. -->
     <style name="Theme.Octave" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="colorSurface">@color/octaveNightGray</item>
+        <item name="colorControlActivated">@color/octaveNightPurple</item>
+
+        <item name="android:statusBarColor">?attr/colorSurface</item>
     </style>
+
 </resources>

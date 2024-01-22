@@ -2,11 +2,12 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Material3.CardView.Outlined"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="2dp"
-    app:cardBackgroundColor="@color/bg_music_item"
-    app:strokeColor="@color/stroke_music_item">
+    android:layout_marginHorizontal="5dp"
+    app:cardBackgroundColor="@color/music_item_bg"
+    app:strokeColor="@color/music_item_stroke">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -60,9 +61,9 @@
             android:layout_height="40dp"
             android:layout_margin="5dp"
             android:soundEffectsEnabled="false"
-            app:iconTint="?attr/colorControlNormal"
             android:visibility="invisible"
             app:icon="@drawable/octaveplay"
+            app:iconTint="?attr/colorControlNormal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/add_button"
             app:layout_constraintTop_toTopOf="parent"
@@ -75,9 +76,9 @@
             android:layout_height="40dp"
             android:layout_margin="5dp"
             android:soundEffectsEnabled="false"
-            app:iconTint="?attr/colorControlNormal"
             android:visibility="invisible"
             app:icon="@drawable/octaveplus"
+            app:iconTint="?attr/colorControlNormal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

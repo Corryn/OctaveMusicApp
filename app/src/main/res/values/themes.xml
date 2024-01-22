@@ -2,7 +2,7 @@
 
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <!-- Set the splash screen background to black -->
-        <item name="windowSplashScreenBackground">@color/octaveLogoGreen</item>
+        <item name="windowSplashScreenBackground">@color/octaveLogoGreen</item> <!-- TODO Dark logo so this can be theme-based? -->
         <!-- Use windowSplashScreenAnimatedIcon to add a drawable or an animated
              drawable. -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
@@ -12,7 +12,6 @@
 
     <!-- Base application theme. -->
     <style name="Theme.Octave" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/octaveLogoGreen</item>
         <item name="colorPrimaryDark">@color/octaveGreen</item>
         <item name="colorPrimaryVariant">@color/octaveOffGreen</item>
@@ -20,11 +19,7 @@
         <item name="colorSurfaceVariant">@color/octaveGray</item>
         <item name="colorControlNormal">@color/octaveGreen</item>
         <item name="colorControlActivated">@color/octaveRed</item>
-        <!-- TODO Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
+
         <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
     </style>
 
