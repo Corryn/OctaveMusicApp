@@ -30,6 +30,7 @@ import java.util.Random
 // TODO Should separate out MusicUiDtos and flow-used data-passing dtos (MusicUiDto for UI, something else for data passing)
 // TODO Separate error flow for error messages
 // TODO Option to limit scope of shuffling?
+// TODO Toggle for sort by name vs. sort by track number (if present)
 class PlayerViewModel : ViewModel() {
 
     private val player = MediaPlayer()
@@ -166,7 +167,7 @@ class PlayerViewModel : ViewModel() {
             song != null -> setSong(context, song)
             shuffle -> shuffle(context)
             else -> { // Try to find the current song in the active list and play the next song. If we can't determine the next song, do nothing.
-                val currentSongIndex = activeList?.indexOf(_currentSong.value ?: return) ?: return
+                val currentSongIndex = activeList?.indexOfFirst { it is MusicUiDto.SongUiDto && it.id == _currentSong.value?.id } ?: return
                 val nextSong = if (currentSongIndex + 1 == activeList?.size) { // Wrap check
                     activeList?.getOrNull(0)
                 } else {
