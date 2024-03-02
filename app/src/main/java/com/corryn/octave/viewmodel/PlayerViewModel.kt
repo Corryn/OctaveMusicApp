@@ -28,7 +28,6 @@ import java.util.LinkedList
 import java.util.Random
 
 // TODO Should separate out MusicUiDtos and flow-used data-passing dtos (MusicUiDto for UI, something else for data passing)
-// TODO Separate error flow for error messages
 // TODO Option to limit scope of shuffling?
 // TODO Toggle for sort by name vs. sort by track number (if present)
 class PlayerViewModel : ViewModel() {
