@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/octave_graph"
+    app:startDestination="@id/playerFragment">
+
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="com.corryn.octave.ui.PlayerFragment"
+        tools:layout="@layout/fragment_player">
+        <action
+            android:id="@+id/action_playerFragment_to_musicFragment"
+            app:destination="@id/musicFragment"
+            app:enterAnim="@anim/slideinmenu"
+            app:exitAnim="@anim/wait_anim"
+            app:popExitAnim="@anim/slideoutmenu" />
+    </fragment>
+    <fragment
+        android:id="@+id/musicFragment"
+        android:name="com.corryn.octave.ui.MusicFragment"
+        tools:layout="@layout/fragment_music"
+        android:label="MusicFragment" />
+</navigation>
