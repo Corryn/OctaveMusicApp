@@ -23,6 +23,7 @@ import com.corryn.octave.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// TODO Figure out why landscape layout works but only when navigating to the fragment, not when changing orientation on the fragment
 // TODO Album level view below artist (+ "all songs" meta-album)
 class MusicFragment : BaseFragment<FragmentMusicBinding>() {
 
